@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 import pygame
 
+from entities.blocks import WallSegment
 from entities.player import Player
 from grid.grid import Grid
 from grid.position import Position
@@ -21,6 +22,7 @@ clock = pygame.time.Clock()
 
 grid = Grid()
 grid.place_entity(Player(Position(100, 200)))
+grid.place_entity(WallSegment(Position(150, 150), Position(400, 150)))
 
 tick_data = TickData()
 while True:

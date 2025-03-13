@@ -28,14 +28,7 @@ class Entity(ABC):
     """
     def __init__(self, position=None):
         self.position = position or Position(0, 0)
-
-    @property
-    @abstractmethod
-    def sprite(self) -> BaseSprite:
-        """
-        Keeps the Sprite (the visual layer) of the entity.
-        """
-        pass
+        self.sprite = None
 
 
 @dataclass
