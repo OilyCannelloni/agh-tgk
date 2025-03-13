@@ -26,12 +26,15 @@ class Entity(ABC):
     """
     A base class for all entities
     """
-    def __init__(self):
-        self.position = Position(0, 0)
+    def __init__(self, position=None):
+        self.position = position or Position(0, 0)
 
     @property
     @abstractmethod
     def sprite(self) -> BaseSprite:
+        """
+        Keeps the Sprite (the visual layer) of the entity.
+        """
         pass
 
 
@@ -45,14 +48,9 @@ class DynamicEntity(Entity, ABC):
     """
     An entity, which has a behavior which is performed every tick.
     """
-    def __init__(self, is_movable: False):
-        super().__init__()
+    def __init__(self, position=None):
+        super().__init__(position=position)
         self.game_tick_events: list[GameTickAction] = []
-        if is_movable:
-            self.add_on_game_tick(self.__update_sprite_position, 1000)
-
-    def __update_sprite_position(self, **data):
-        self.sprite.update_position(self.position)
 
     def on_game_tick(self, **data):
         for gta in self.game_tick_events:
@@ -71,4 +69,10 @@ class DynamicEntity(Entity, ABC):
         self.game_tick_events.insert(index, GameTickAction(priority, action))
 
 
+class MovableEntity(DynamicEntity, ABC):
+    def __init__(self, position=None):
+        super().__init__(position=position)
+        self.add_on_game_tick(self.__update_sprite_position, 1000)
 
+    def __update_sprite_position(self, **data):
+        self.sprite.update_position(self.position)

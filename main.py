@@ -4,6 +4,8 @@ import pygame
 
 from entities.player import Player
 from grid.grid import Grid
+from grid.position import Position
+
 
 @dataclass
 class TickData:
@@ -18,7 +20,7 @@ screen = pygame.display.set_mode((1280,720))
 clock = pygame.time.Clock()
 
 grid = Grid()
-grid.place_entity(Player())
+grid.place_entity(Player(Position(100, 200)))
 
 tick_data = TickData()
 while True:
