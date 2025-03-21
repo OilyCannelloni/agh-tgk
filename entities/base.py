@@ -1,12 +1,16 @@
+import inspect
 from abc import ABC
 from collections.abc import Callable
 from dataclasses import field
+from typing import Any
 
 import pygame
 
+from functools import wraps
 from grid.position import *
 from grid.grid import Grid
 from entities.types import EntityType
+from terminal.terminal import Terminal
 
 grid = Grid()
 
@@ -46,8 +50,8 @@ class Entity(ABC):
 
 @dataclass
 class GameTickAction:
-    priority: int = 500
-    action: Callable = field(default_factory=lambda: lambda: None)
+    priority: int
+    action: Callable
 
 
 class DynamicEntity(Entity, ABC):
@@ -100,3 +104,24 @@ class MovableEntity(DynamicEntity, ABC):
     def __update_sprite_position(self, **data):
         self.sprite.update_position(self.position)
 
+
+class HackableEntity(DynamicEntity, ABC):
+    def __init__(self):
+        super().__init__()
+        self.terminal = Terminal()
+
+    @staticmethod
+    def hackable(f):
+        @wraps(f)
+        def wrapper(self: HackableEntity, **kwargs):
+            print("hvo")
+            f(self, **kwargs)
+        return wrapper
+
+
+    def _expose_hackable_method(self, func: Callable):
+        code = inspect.getsource(func)
+        self.terminal.set_text_from_string(code)
+
+    def _apply_hacked_method_body(self, func: Callable, code: str):
+        pass

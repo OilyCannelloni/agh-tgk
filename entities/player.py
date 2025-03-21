@@ -7,7 +7,7 @@ from .base import BaseSprite, MovableEntity
 
 @dataclass
 class Player(MovableEntity, ABC):
-    speed = 3
+    speed = 4
 
     def __init__(self, position=None):
         super().__init__(position=position)
@@ -37,7 +37,7 @@ class Player(MovableEntity, ABC):
                     vector = vector.add(RIGHT)
                 case _:
                     vector = vector.add(UP)
-        self.current_movement_vector = vector
+        self.current_movement_vector = vector.scale(self.speed)
 
     def __move(self, **data):
         super()._move(self.current_movement_vector)

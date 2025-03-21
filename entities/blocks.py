@@ -1,9 +1,12 @@
+from random import random, randint
 from abc import ABC
 
 import pygame
 
-from entities.base import Entity, BaseSprite
+from entities.base import Entity, BaseSprite, DynamicEntity, GameTickAction, HackableEntity
 from grid.position import Position
+from grid.grid import Grid
+grid = Grid()
 
 
 class WallSegment(Entity, ABC):
@@ -24,7 +27,8 @@ class WallSegment(Entity, ABC):
 
         hb = pygame.Rect(self.position.x, self.position.y, self.width, self.height)
         super().__init__(position=start, hitbox=hb)
-        print(hb)
+
+        print(start, end, hb)
 
 
         self.sprite = BaseSprite(
@@ -36,4 +40,28 @@ class WallSegment(Entity, ABC):
         return False
 
     def on_collision_with(self, entity: "Entity"):
-        print(entity)
+        pass
+
+
+class WallBuilder(HackableEntity, ABC):
+    def __init__(self, position: Position):
+        super().__init__()
+        self.sprite = BaseSprite(pygame.Surface([20, 20]), pygame.Rect(position.x, position.y, 20, 20))
+        self.sprite.image.fill(pygame.color.Color("pink"))
+        self.add_on_game_tick(self.build_wall, 50)
+
+        self._expose_hackable_method(self.build_wall)
+
+    def build_wall(self, **kwargs):
+        if random() > 0.02:
+            return
+
+        start = Position(randint(300, 700), randint(300, 700))
+        if random() < 0.5:
+            end = Position(start.x, randint(300, 700))
+        else:
+            end = Position(randint(300, 700), start.y)
+
+        wall = WallSegment(start, end)
+        grid.place_entity(wall)
+
