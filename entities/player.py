@@ -23,20 +23,15 @@ class Player(MovableEntity, ABC):
             self.current_movement_vector = Vector(0, 0)
             return
 
-        MOVE_KEYS = (pygame.K_LEFT, pygame.K_DOWN, pygame.K_RIGHT, pygame.K_UP)
         vector = Vector(0, 0)
-        for key in keys:
-            if key not in MOVE_KEYS:
-                continue
-            match key:
-                case pygame.K_LEFT:
-                    vector = vector.add(LEFT)
-                case pygame.K_DOWN:
-                    vector = vector.add(DOWN)
-                case pygame.K_RIGHT:
-                    vector = vector.add(RIGHT)
-                case _:
-                    vector = vector.add(UP)
+        if keys[pygame.K_a]:
+            vector = vector.add(LEFT)
+        if keys[pygame.K_w]:
+            vector = vector.add(UP)
+        if keys[pygame.K_d]:
+            vector = vector.add(RIGHT)
+        if keys[pygame.K_s]:
+            vector = vector.add(DOWN)
         self.current_movement_vector = vector.scale(self.speed)
 
     def __move(self, **data):

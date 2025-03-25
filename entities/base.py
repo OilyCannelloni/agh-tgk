@@ -121,7 +121,7 @@ class HackableEntity(DynamicEntity, ABC):
 
     def _expose_hackable_method(self, func: Callable):
         code = inspect.getsource(func)
-        self.terminal.set_text_from_string(code)
+        self.terminal.set_text_raw(code)
 
     def _apply_hacked_method_body(self, func: Callable, code: str):
         pass

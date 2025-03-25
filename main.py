@@ -45,12 +45,10 @@ while True:
             pygame.quit()
             raise SystemExit
 
-        if event.type == pygame.KEYDOWN:
-            tick_data.keys_down.append(event.key)
-
-        if event.type == pygame.KEYUP:
-            tick_data.keys_down.remove(event.key)
-
+    if not terminal.enabled:
+        tick_data.keys_down = pressed_keys
+    else:
+        tick_data.keys_down = []
 
     # Do logical updates here.
     # ...
