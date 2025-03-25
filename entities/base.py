@@ -7,6 +7,7 @@ import pygame
 from grid.position import *
 from grid.grid import Grid
 from entities.types import EntityType
+from ui.hint_renderer import hint_renderer
 
 grid = Grid()
 
@@ -50,8 +51,7 @@ class Hitbox(pygame.Rect, ABC):
 class PlayerInteractHitbox(Hitbox, ABC):
     def on_collision_with(self, e: "Entity") -> None:
         if e.type == EntityType.PLAYER:
-            #             TODO: show E hint
-            pass
+            hint_renderer.show_hint()
 
     def is_passable_for(self, e: "Entity") -> bool:
         return True

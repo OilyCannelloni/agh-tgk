@@ -6,6 +6,7 @@ from entities.blocks import WallSegment
 from entities.player import Player
 from grid.grid import Grid
 from grid.position import Position
+from ui.hint_renderer import hint_renderer
 
 
 @dataclass
@@ -18,6 +19,7 @@ class TickData:
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720))
+hint_renderer.initialize(screen)
 clock = pygame.time.Clock()
 
 grid = Grid()
@@ -51,6 +53,8 @@ while True:
     screen.fill("black")  # Fill the display with a solid color
     grid.sprites.update()
     grid.sprites.draw(screen)
+
+    hint_renderer.render()
 
     pygame.display.flip()  # Refresh on-screen display
     clock.tick(30)         # wait until next frame (at 30 FPS)

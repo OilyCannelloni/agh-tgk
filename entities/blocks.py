@@ -2,7 +2,7 @@ from abc import ABC
 
 import pygame
 
-from entities.base import Entity, BaseSprite, BlockingHitbox
+from entities.base import Entity, BaseSprite, BlockingHitbox, PlayerInteractHitbox
 from grid.position import Position
 
 
@@ -22,8 +22,9 @@ class WallSegment(Entity, ABC):
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
 
-        hb = BlockingHitbox(self.position.x, self.position.y, self.width, self.height)
-        super().__init__(position=start, hitboxes=[hb])
+        hb = [BlockingHitbox(self.position.x, self.position.y, self.width, self.height),
+              PlayerInteractHitbox(self.position.x, self.position.y, self.width, self.height)]
+        super().__init__(position=start, hitboxes=hb)
         print(hb)
 
 
@@ -37,3 +38,5 @@ class WallSegment(Entity, ABC):
 
     def on_collision_with(self, entity: "Entity"):
         print(entity)
+        for hb in self.hitboxes:
+            hb.on_collision_with(entity)
