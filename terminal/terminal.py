@@ -1,11 +1,18 @@
+from typing import TYPE_CHECKING
+
 import pygame
 from pygame_texteditor import TextEditor
+import pygamepal as pp
+
+if TYPE_CHECKING:
+    from entities.base import HackableEntity
+
 
 class Terminal(TextEditor):
     OFFSET_X = 1200
     OFFSET_Y = 200
     WIDTH = 700
-    HEIGHT = 1000
+    HEIGHT = 800
     BORDER_WIDTH = 5
 
     _instance = None
@@ -25,11 +32,18 @@ class Terminal(TextEditor):
         self.set_drag_end_after_last_line()
         self.set_line_numbers(True)
         self.enabled = False
+        self.active_entity: HackableEntity = None
         self.rect = pygame.rect.Rect(Terminal.OFFSET_X - Terminal.BORDER_WIDTH,
                                      Terminal.OFFSET_Y - Terminal.BORDER_WIDTH, Terminal.WIDTH, Terminal.HEIGHT)
         self.line_start_y += 5
         self.initialize()
-
+        self.input = pp.Input()
+        self.button = pp.Button(
+            input=self.input,
+            position=(Terminal.OFFSET_X + Terminal.WIDTH // 2, Terminal.OFFSET_Y + Terminal.HEIGHT + 20),
+            text = "Run code",
+            onSelected=self.apply_code
+        )
 
     def on_tick(self):
         self.create_visual_effects()
@@ -37,6 +51,13 @@ class Terminal(TextEditor):
     def create_visual_effects(self):
         self.set_line_numbers(True)
         pygame.draw.rect(pygame.display.get_surface(), pygame.color.Color("white"), self.rect, width=5)
+
+    def apply_code(self, button):
+        self.active_entity.apply_code(self.get_text_as_string())
+
+    def set_active_entity(self, entity: "HackableEntity"):
+        self.active_entity = entity
+
 
     def set_enabled(self, enable: bool):
         self.enabled = enable
@@ -58,7 +79,7 @@ class Terminal(TextEditor):
             ),
         )
 
-    def set_text_raw(self, ss: str):
+    def set_code(self, ss: str):
         ss = ss.split("\n")
         if all([line.startswith("    ") or len(line) == 0 for line in ss]):
             for i in range(len(ss)):
@@ -90,6 +111,9 @@ class Terminal(TextEditor):
         :param mouse_y:
         :param mouse_pressed:
         """
+        self.input.update()
+        self.button.update()
+
 
         if mouse_pressed[0]:
             if self.rect.collidepoint(mouse_x, mouse_y):
@@ -100,6 +124,7 @@ class Terminal(TextEditor):
         # RENDERING 1 - Background objects
         self.render_background_coloring()
         self.render_line_numbers()
+        self.button.draw(self.screen)
 
         # RENDERING 2 - Line contents, caret
         self.render_highlight(mouse_x, mouse_y)

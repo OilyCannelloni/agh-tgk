@@ -1,5 +1,8 @@
+import functools
 import inspect
+import re
 from abc import ABC
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import field
 from typing import Any
@@ -105,23 +108,46 @@ class MovableEntity(DynamicEntity, ABC):
         self.sprite.update_position(self.position)
 
 
+class HackableMethod:
+    meth_info = defaultdict(dict)
+
+    def __init__(self, meth: Callable):
+        class_name, func_name = meth.__qualname__.rsplit('.', 1)
+        print(class_name, func_name)
+        HackableMethod.meth_info[class_name][func_name] = meth
+        self._default_meth = meth
+
+    def __call__(self, *args, **kwargs):
+        self._default_meth(*args, **kwargs)
+
+    def __get__(self, instance, owner):
+        return functools.partial(self.__call__, instance)
+
+    @classmethod
+    def get_all_hackable_methods(cls, owner_class):
+        print(HackableMethod.meth_info)
+        return cls.meth_info[owner_class.__name__]
+
+
 class HackableEntity(DynamicEntity, ABC):
     def __init__(self):
         super().__init__()
         self.terminal = Terminal()
 
-    @staticmethod
-    def hackable(f):
-        @wraps(f)
-        def wrapper(self: HackableEntity, **kwargs):
-            print("hvo")
-            f(self, **kwargs)
-        return wrapper
+    def display_hackable_methods(self):
+        code = ""
+        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
+            print(method)
+            code += "\n"
+            source = inspect.getsource(method)
+            code += source.strip().removeprefix("@HackableMethod")
 
+        self.terminal.set_active_entity(self)
+        self.terminal.set_code(code)
 
-    def _expose_hackable_method(self, func: Callable):
-        code = inspect.getsource(func)
-        self.terminal.set_text_raw(code)
-
-    def _apply_hacked_method_body(self, func: Callable, code: str):
-        pass
+    def apply_code(self, code: str):
+        print(code)
+        for method_code in re.finditer(r"def .+\(.*\):.*", code):
+            print(method_code)
+        # new_body = eval(code)
+        # setattr(self, func_name, new_body)

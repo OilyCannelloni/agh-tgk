@@ -3,7 +3,7 @@ from abc import ABC
 
 import pygame
 
-from entities.base import Entity, BaseSprite, DynamicEntity, GameTickAction, HackableEntity
+from entities.base import Entity, BaseSprite, DynamicEntity, GameTickAction, HackableEntity, HackableMethod
 from grid.position import Position
 from grid.grid import Grid
 grid = Grid()
@@ -50,9 +50,10 @@ class WallBuilder(HackableEntity, ABC):
         self.sprite.image.fill(pygame.color.Color("pink"))
         self.add_on_game_tick(self.build_wall, 50)
 
-        self._expose_hackable_method(self.build_wall)
+        self.display_hackable_methods()
 
-    def build_wall(self, **kwargs):
+    @HackableMethod
+    def build_wall(self, *args, **kwargs):
         if random() > 0.02:
             return
 
@@ -64,4 +65,8 @@ class WallBuilder(HackableEntity, ABC):
 
         wall = WallSegment(start, end)
         grid.place_entity(wall)
+
+    @HackableMethod
+    def nothing(self):
+        print("adwsdads")
 
