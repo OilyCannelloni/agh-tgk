@@ -3,11 +3,13 @@ import pygame
 
 from grid.position import *
 from .base import BaseSprite, MovableEntity
+from entities.types import EntityType
 
 
 @dataclass
 class Player(MovableEntity, ABC):
     speed = 3
+    type = EntityType.PLAYER
 
     def __init__(self, position=None):
         super().__init__(position=position)

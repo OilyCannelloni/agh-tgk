@@ -38,5 +38,5 @@ class Grid:
 
     def get_all_colliding_objects(self, hitbox):
         for e in self.entities:
-            if hitbox.colliderect(e.hitbox):
+            if any(hitbox.colliderect(h) for h in e.hitboxes):
                 yield e

@@ -2,7 +2,7 @@ from abc import ABC
 
 import pygame
 
-from entities.base import Entity, BaseSprite
+from entities.base import Entity, BaseSprite, BlockingHitbox
 from grid.position import Position
 
 
@@ -22,8 +22,8 @@ class WallSegment(Entity, ABC):
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
 
-        hb = pygame.Rect(self.position.x, self.position.y, self.width, self.height)
-        super().__init__(position=start, hitbox=hb)
+        hb = BlockingHitbox(self.position.x, self.position.y, self.width, self.height)
+        super().__init__(position=start, hitboxes=[hb])
         print(hb)
 
 
