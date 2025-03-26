@@ -9,6 +9,8 @@ from typing import Any
 
 import pygame
 
+from random import random, randint
+
 from functools import wraps
 from grid.position import *
 from grid.grid import Grid
@@ -112,42 +114,82 @@ class HackableMethod:
     meth_info = defaultdict(dict)
 
     def __init__(self, meth: Callable):
-        class_name, func_name = meth.__qualname__.rsplit('.', 1)
-        print(class_name, func_name)
-        HackableMethod.meth_info[class_name][func_name] = meth
+        """
+        Inserts the default body of a hackable method to meth_info dictionary.
+        """
+        self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
+        print(self.class_name, self.meth_name)
+        HackableMethod.meth_info[self.class_name][self.meth_name] = meth
         self._default_meth = meth
 
-    def __call__(self, *args, **kwargs):
-        self._default_meth(*args, **kwargs)
+    def __call__(self, instance, owner, *args, **kwargs):
+        """
+        Overrides the decorated method call. Calls the version stored in meth_info instead.
+        :param instance: Calling object instance
+        :param owner: Calling object type
+        :return: What the hacked method returns
+        """
+        return HackableMethod.meth_info[self.class_name][self.meth_name](instance, *args, **kwargs)
 
     def __get__(self, instance, owner):
-        return functools.partial(self.__call__, instance)
+        """
+        Executes before __call__ when the method is called. Provides __call__ with access
+        to the calling instance and type.
+        """
+        return functools.partial(self.__call__, instance, owner)
 
     @classmethod
     def get_all_hackable_methods(cls, owner_class):
-        print(HackableMethod.meth_info)
+        """
+        Returns all hackable methods for a given type.
+        :param owner_class: The type.
+        :return: A dictionary of (method_name: method) pairs.
+        """
         return cls.meth_info[owner_class.__name__]
 
 
 class HackableEntity(DynamicEntity, ABC):
     def __init__(self):
         super().__init__()
-        self.terminal = Terminal()
+        self._terminal = Terminal()
+        self._hackable_method_names = None
+
+    def get_hackable_methods(self):
+        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
+            yield name, method
+
+    def _get_hackable_method_names(self):
+        if self._hackable_method_names is not None:
+            return self._hackable_method_names
+        self._hackable_method_names = list(HackableMethod.get_all_hackable_methods(self.__class__).keys())
+        return self._hackable_method_names
+
+    def _overwrite_hackable_method_with_user_code(self, meth_name: str, meth: Callable):
+        HackableMethod.meth_info[self.__class__.__name__][meth_name] = meth
 
     def display_hackable_methods(self):
         code = ""
-        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
+        for name, method in self.get_hackable_methods():
             print(method)
             code += "\n"
             source = inspect.getsource(method)
             code += source.strip().removeprefix("@HackableMethod")
 
-        self.terminal.set_active_entity(self)
-        self.terminal.set_code(code)
+        self._terminal.set_active_entity(self)
+        self._terminal.set_code(code)
 
     def apply_code(self, code: str):
-        print(code)
-        for method_code in re.finditer(r"def .+\(.*\):.*", code):
-            print(method_code)
-        # new_body = eval(code)
-        # setattr(self, func_name, new_body)
+        scope = {}
+        # “As for the end of the universe...
+        # I say let it come as it will, in ice, fire, or darkness.
+        # What did the universe ever do for me that I should mind its welfare?”
+        exec(code, None, scope)
+        print(scope)
+        for name, value in scope.items():
+            if name in self._get_hackable_method_names():
+                self._overwrite_hackable_method_with_user_code(name, value)
+                print("axax")
+
+        print(HackableMethod.meth_info)
+
+

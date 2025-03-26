@@ -70,3 +70,6 @@ class WallBuilder(HackableEntity, ABC):
     def nothing(self):
         print("adwsdads")
 
+    def stuff(self):
+        print("stuff")
+
