@@ -1,22 +1,14 @@
-import functools
 import inspect
-import re
 from abc import ABC
-from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import field
-from typing import Any
 
 import pygame
 
-from random import random, randint
-
-from functools import wraps
-
 from entities.entity_library import EntityLibrary
-from grid.position import *
-from grid.grid import Grid
 from entities.types import EntityType
+from grid.grid import Grid
+from grid.position import *
+from hacking.hackable_method import HackableMethod
 from terminal.terminal import Terminal
 
 grid = Grid()
@@ -113,54 +105,10 @@ class MovableEntity(DynamicEntity, ABC):
         self.sprite.update_position(self.position)
 
 
-class HackableMethod:
-    """
-    A class-decorator used to describe a method, the code of which can be altered by the user.
-    When creating new Entities, use
-    @HackableMethod
-    def do_stuff(self, arg1):
-        <default_body>
-    """
-
-    # A static dictionary containing the overwritten methods
-    meth_info = defaultdict(dict)
-
-    def __init__(self, meth: Callable):
-        """
-        Inserts the default body of a hackable method to meth_info dictionary.
-        """
-        self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
-        print(self.class_name, self.meth_name)
-        HackableMethod.meth_info[self.class_name][self.meth_name] = meth
-        self._default_meth = meth
-
-    def __call__(self, instance, owner, *args, **kwargs):
-        """
-        Overrides the decorated method call. Calls the version stored in meth_info instead.
-        :param instance: Calling object instance
-        :param owner: Calling object type
-        :return: What the hacked method returns
-        """
-        return HackableMethod.meth_info[self.class_name][self.meth_name](instance, *args, **kwargs)
-
-    def __get__(self, instance, owner):
-        """
-        Executes before __call__ when the method is called. Provides __call__ with access
-        to the calling instance and type.
-        """
-        return functools.partial(self.__call__, instance, owner)
-
-    @classmethod
-    def get_all_hackable_methods(cls, owner_class):
-        """
-        Returns all hackable methods for a given type.
-        :param owner_class: The type.
-        :return: A dictionary of (method_name: method) pairs.
-        """
-        return cls.meth_info[owner_class.__name__]
-
-
 class HackableEntity(DynamicEntity, ABC):
+    """
+    Describes an entity type the behavior of which can be altered by the user.
+    """
     def __init__(self):
         super().__init__()
         self._terminal = Terminal()
@@ -172,16 +120,13 @@ class HackableEntity(DynamicEntity, ABC):
         self._hackable_method_names = list(HackableMethod.get_all_hackable_methods(self.__class__).keys())
         return self._hackable_method_names
 
-    def _overwrite_hackable_method_with_user_code(self, meth_name: str, meth: Callable):
-        HackableMethod.meth_info[self.__class__.__name__][meth_name] = meth
-
     def display_hackable_methods(self):
         """
         Writes the current bodies of all hackable methods of the inheriting class
         onto the terminal
         """
         code = ""
-        for name, method in HackableMethod.get_all_hackable_methods(self.__class__):
+        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
             code += "\n"
             source = inspect.getsource(method)
             code += source.strip().removeprefix("@HackableMethod")
@@ -193,11 +138,4 @@ class HackableEntity(DynamicEntity, ABC):
         """
         Applies the code from the terminal to overwrite the hackable methods of the inheriting class
         """
-        scope = {}
-        # “As for the end of the universe...
-        # I say let it come as it will, in ice, fire, or darkness.
-        # What did the universe ever do for me that I should mind its welfare?”
-        exec(code, None, scope)
-        for var_name, value in scope.items():
-            if var_name in self._get_hackable_method_names():
-                self._overwrite_hackable_method_with_user_code(var_name, value)
+        HackableMethod.apply_code(code, self.__class__.__name__, self._get_hackable_method_names())

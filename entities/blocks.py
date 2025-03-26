@@ -1,11 +1,12 @@
-from random import random, randint
 from abc import ABC
+from random import random, randint
 
 import pygame
 
-from entities.base import Entity, BaseSprite, DynamicEntity, GameTickAction, HackableEntity, HackableMethod
-from grid.position import Position
+from entities.base import Entity, BaseSprite, HackableEntity, HackableMethod
 from grid.grid import Grid
+from grid.position import Position
+
 grid = Grid()
 
 
