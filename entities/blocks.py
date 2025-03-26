@@ -49,7 +49,6 @@ class WallBuilder(HackableEntity, ABC):
         self.sprite = BaseSprite(pygame.Surface([20, 20]), pygame.Rect(position.x, position.y, 20, 20))
         self.sprite.image.fill(pygame.color.Color("pink"))
         self.add_on_game_tick(self.build_wall, 50)
-
         self.display_hackable_methods()
 
     @HackableMethod

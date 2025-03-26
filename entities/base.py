@@ -114,6 +114,15 @@ class MovableEntity(DynamicEntity, ABC):
 
 
 class HackableMethod:
+    """
+    A class-decorator used to describe a method, the code of which can be altered by the user.
+    When creating new Entities, use
+    @HackableMethod
+    def do_stuff(self, arg1):
+        <default_body>
+    """
+
+    # A static dictionary containing the overwritten methods
     meth_info = defaultdict(dict)
 
     def __init__(self, meth: Callable):
@@ -157,10 +166,6 @@ class HackableEntity(DynamicEntity, ABC):
         self._terminal = Terminal()
         self._hackable_method_names = None
 
-    def get_hackable_methods(self):
-        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
-            yield name, method
-
     def _get_hackable_method_names(self):
         if self._hackable_method_names is not None:
             return self._hackable_method_names
@@ -171,9 +176,12 @@ class HackableEntity(DynamicEntity, ABC):
         HackableMethod.meth_info[self.__class__.__name__][meth_name] = meth
 
     def display_hackable_methods(self):
+        """
+        Writes the current bodies of all hackable methods of the inheriting class
+        onto the terminal
+        """
         code = ""
-        for name, method in self.get_hackable_methods():
-            print(method)
+        for name, method in HackableMethod.get_all_hackable_methods(self.__class__):
             code += "\n"
             source = inspect.getsource(method)
             code += source.strip().removeprefix("@HackableMethod")
@@ -182,17 +190,14 @@ class HackableEntity(DynamicEntity, ABC):
         self._terminal.set_code(code)
 
     def apply_code(self, code: str):
+        """
+        Applies the code from the terminal to overwrite the hackable methods of the inheriting class
+        """
         scope = {}
         # “As for the end of the universe...
         # I say let it come as it will, in ice, fire, or darkness.
         # What did the universe ever do for me that I should mind its welfare?”
         exec(code, None, scope)
-        print(scope)
-        for name, value in scope.items():
-            if name in self._get_hackable_method_names():
-                self._overwrite_hackable_method_with_user_code(name, value)
-                print("axax")
-
-        print(HackableMethod.meth_info)
-
-
+        for var_name, value in scope.items():
+            if var_name in self._get_hackable_method_names():
+                self._overwrite_hackable_method_with_user_code(var_name, value)
