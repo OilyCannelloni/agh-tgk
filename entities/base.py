@@ -12,6 +12,8 @@ import pygame
 from random import random, randint
 
 from functools import wraps
+
+from entities.entity_library import EntityLibrary
 from grid.position import *
 from grid.grid import Grid
 from entities.types import EntityType
@@ -45,6 +47,7 @@ class Entity(ABC):
         self.position = position or Position(0, 0)
         self.sprite = None
         self.hitbox = hitbox or pygame.Rect(self.position.x, self.position.y, 20, 20)
+        EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
 
     def on_collision_with(self, entity: "Entity"):
         pass

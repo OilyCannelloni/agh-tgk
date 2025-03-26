@@ -26,9 +26,9 @@ clock = pygame.time.Clock()
 terminal = Terminal()
 
 grid = Grid()
-grid.place_entity(Player(Position(100, 200)))
-grid.place_entity(WallSegment(Position(150, 150), Position(300, 150)))
-grid.place_entity(WallBuilder(Position(200, 450)))
+grid.place_existing_entity(Player(Position(100, 200)))
+grid.place_existing_entity(WallSegment(Position(150, 150), Position(300, 150)))
+grid.place_existing_entity(WallBuilder(Position(200, 450)))
 
 tick_data = TickData()
 while True:
