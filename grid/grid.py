@@ -5,6 +5,7 @@ import pygame
 
 from .position import Position
 from entities.types import EntityType
+from ui.hint_renderer import hint_renderer
 
 if TYPE_CHECKING:
     from entities.base import Entity, DynamicEntity
@@ -17,6 +18,7 @@ class Grid:
     entities: list["Entity"] = field(default_factory=list)
 
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
             cls._instance = object.__new__(cls, *args, **kwargs)
@@ -31,7 +33,6 @@ class Grid:
         if entity.type & EntityType.DYNAMIC:
             self.dynamic_entities.append(entity)
 
-
     def process_dynamic_entities(self, **data):
         for entity in self.dynamic_entities:
             entity.on_game_tick(**data)
@@ -40,3 +41,12 @@ class Grid:
         for e in self.entities:
             if any(hitbox.colliderect(h) for h in e.hitboxes):
                 yield e
+
+    def process_player_input(self, keys_down: list[int]):
+        if pygame.K_e in keys_down:
+            hint_renderer.clear_hint()
+            # TODO
+
+        if pygame.K_t in keys_down:
+            hint_renderer.clear_hint()
+            # TODO

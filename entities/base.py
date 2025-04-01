@@ -131,6 +131,7 @@ class MovableEntity(DynamicEntity, ABC):
 
     def _move(self, vector: Vector):
         new_hitboxes = [hb.move(vector.x, vector.y) for hb in self.hitboxes]
+        new_interactable = None
 
         for new_hitbox in new_hitboxes:
             for target in grid.get_all_colliding_objects(new_hitbox):
@@ -141,14 +142,30 @@ class MovableEntity(DynamicEntity, ABC):
                 if not target.is_passable_for(self):
                     return
 
+                if isinstance(target, InteractableEntity) and new_interactable is None:
+                    new_interactable = target
+
         self.position = self.position.add(vector)
         for i in range(len(self.hitboxes)):
             self.hitboxes[i] = new_hitboxes[i]
+
+        if new_interactable is None and (vector.x != 0 or vector.y != 0):
+            hint_renderer.clear_hint()
 
     def __update_sprite_position(self, **data):
         self.sprite.update_position(self.position)
 
 
 class InteractableEntity(Entity, ABC):
-    def __init__(self, position=None):
-        super().__init__(position, hitboxes=[PlayerInteractHitbox(self.position.x, self.position.y, 20, 20)])
+    def __init__(self, position=None, hitboxes=None):
+        super().__init__(position, hitboxes=hitboxes or [PlayerInteractHitbox(self.position.x, self.position.y, 20, 20)])
+
+    def on_collision_with(self, entity: "Entity"):
+        for hb in self.hitboxes:
+            hb.on_collision_with(entity)
+
+    def is_passable_for(self, entity: "Entity"):
+        for hb in self.hitboxes:
+            if not hb.is_passable_for(entity):
+                return False
+        return True
