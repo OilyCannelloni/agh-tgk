@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from entities.entity_library import EntityLibrary
 from .position import Position
 from entities.types import EntityType
 
@@ -22,7 +23,7 @@ class Grid:
             cls._instance = object.__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def place_entity(self, entity: "Entity", position: "Position" = None):
+    def place_existing_entity(self, entity: "Entity", position: "Position" = None):
         if position is not None:
             entity.position = position
         self.sprites.add(entity.sprite)
@@ -31,6 +32,9 @@ class Grid:
         if entity.type & EntityType.DYNAMIC:
             self.dynamic_entities.append(entity)
 
+    def place_entity(self, entity_name: str, *args, position: "Position" = None, **kwargs):
+        entity = EntityLibrary.create_entity(entity_name, *args, **kwargs)
+        self.place_existing_entity(entity, position)
 
     def process_dynamic_entities(self, **data):
         for entity in self.dynamic_entities:
