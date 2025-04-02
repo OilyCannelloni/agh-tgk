@@ -1,13 +1,17 @@
+import inspect
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import field
 
 import pygame
 
+from entities.entity_library import EntityLibrary
+from entities.types import EntityType
 from grid.position import *
 from grid.grid import Grid
 from entities.types import EntityType
 from ui.hint_renderer import hint_renderer
+from hacking.hackable_method import HackableMethod
+from terminal.terminal import Terminal
 
 grid = Grid()
 
@@ -75,6 +79,7 @@ class Entity(ABC):
     def __init__(self, position=None, hitboxes=None):
         self.position = position or Position(0, 0)
         self.sprite = None
+        EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
         self.hitboxes = hitboxes or [BlockingHitbox(self.position.x, self.position.y, 20, 20)]
 
     def get_hitbox(self, hitbox_type: type):
@@ -91,8 +96,8 @@ class Entity(ABC):
 
 @dataclass
 class GameTickAction:
-    priority: int = 500
-    action: Callable = field(default_factory=lambda: lambda: None)
+    priority: int
+    action: Callable
 
 
 class DynamicEntity(Entity, ABC):
@@ -169,3 +174,38 @@ class InteractableEntity(Entity, ABC):
             if not hb.is_passable_for(entity):
                 return False
         return True
+
+class HackableEntity(DynamicEntity, ABC):
+    """
+    Describes an entity type the behavior of which can be altered by the user.
+    """
+    def __init__(self):
+        super().__init__()
+        self._terminal = Terminal()
+        self._hackable_method_names = None
+
+    def _get_hackable_method_names(self):
+        if self._hackable_method_names is not None:
+            return self._hackable_method_names
+        self._hackable_method_names = list(HackableMethod.get_all_hackable_methods(self.__class__).keys())
+        return self._hackable_method_names
+
+    def display_hackable_methods(self):
+        """
+        Writes the current bodies of all hackable methods of the inheriting class
+        onto the terminal
+        """
+        code = ""
+        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
+            code += "\n"
+            source = inspect.getsource(method)
+            code += source.strip().removeprefix("@HackableMethod")
+
+        self._terminal.set_active_entity(self)
+        self._terminal.set_code(code)
+
+    def apply_code(self, code: str):
+        """
+        Applies the code from the terminal to overwrite the hackable methods of the inheriting class
+        """
+        HackableMethod.apply_code(code, self.__class__.__name__, self._get_hackable_method_names())

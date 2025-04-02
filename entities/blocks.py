@@ -1,15 +1,19 @@
 from abc import ABC
+from random import random, randint
 
 import pygame
 
-from entities.base import Entity, BaseSprite, BlockingHitbox, PlayerInteractHitbox, InteractableEntity
+from entities.base import *
 from grid.position import Position
+from grid.grid import Grid
+
+grid = Grid()
 
 
 class WallSegment(Entity, ABC):
     THICKNESS = 10
 
-    def __init__(self, start: Position, end: Position):
+    def __init__(self, start: Position, end: Position, color="white"):
         if start.x == end.x:
             self.height = abs(start.y - end.y)
             self.width = WallSegment.THICKNESS
@@ -27,7 +31,7 @@ class WallSegment(Entity, ABC):
         self.sprite = BaseSprite(
             pygame.Surface([self.width, self.height]),
             pygame.Rect(self.position.x, self.position.y, self.width, self.height))
-        self.sprite.image.fill(pygame.color.Color("white"))
+        self.sprite.image.fill(pygame.color.Color(color))
 
     def is_passable_for(self, entity: "Entity"):
         return False
@@ -47,3 +51,34 @@ class ExampleInteractable(InteractableEntity):
             pygame.Rect(position.x, position.y, 50, 50)
         )
         self.sprite.image.fill(pygame.Color("blue"))
+        pass
+
+
+class WallBuilder(HackableEntity, ABC):
+    def __init__(self, position: Position):
+        super().__init__()
+        self.sprite = BaseSprite(pygame.Surface([20, 20]), pygame.Rect(position.x, position.y, 20, 20))
+        self.sprite.image.fill(pygame.color.Color("pink"))
+        self.add_on_game_tick(self.build_wall, 50)
+        self.display_hackable_methods()
+
+    @HackableMethod
+    def build_wall(self, *args, **kwargs):
+        if random() > 0.02:
+            return
+
+        start = Position(randint(300, 700), randint(300, 700))
+        if random() < 0.5:
+            end = Position(start.x, randint(300, 700))
+        else:
+            end = Position(randint(300, 700), start.y)
+
+        grid.place_entity("WallSegment", start, end)
+
+    @HackableMethod
+    def nothing(self):
+        print("adwsdads")
+
+    def stuff(self):
+        print("stuff")
+

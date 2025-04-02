@@ -1,12 +1,14 @@
 from dataclasses import dataclass, field
 
 import pygame
+from pygame_texteditor import TextEditor
 
-from entities.blocks import WallSegment, ExampleInteractable
+from entities.blocks import WallSegment, WallBuilder, ExampleInteractable
 from entities.player import Player
 from grid.grid import Grid
 from grid.position import Position
 from ui.hint_renderer import hint_renderer
+from terminal.terminal import Terminal
 
 
 @dataclass
@@ -18,9 +20,12 @@ class TickData:
 
 
 pygame.init()
-screen = pygame.display.set_mode((1280,720))
+screen = pygame.display.set_mode((2000,1500))
 hint_renderer.initialize(screen)
 clock = pygame.time.Clock()
+
+
+terminal = Terminal()
 
 grid = Grid()
 grid.place_entity(Player(Position(100, 200)))
@@ -32,16 +37,20 @@ while True:
     # Process player inputs.
     tick_data.clear()
 
-    for event in pygame.event.get():
+    pygame_events = pygame.event.get()
+    pressed_keys = pygame.key.get_pressed()
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    mouse_pressed = pygame.mouse.get_pressed()
+
+    for event in pygame_events:
         if event.type == pygame.QUIT:
             pygame.quit()
             raise SystemExit
 
-        if event.type == pygame.KEYDOWN:
-            tick_data.keys_down.append(event.key)
-
-        if event.type == pygame.KEYUP:
-            tick_data.keys_down.remove(event.key)
+    if not terminal.enabled:
+        tick_data.keys_down = pressed_keys
+    else:
+        tick_data.keys_down = []
 
     # Do logical updates here.
     # ...
@@ -55,6 +64,10 @@ while True:
     grid.sprites.draw(screen)
 
     hint_renderer.render()
+
+    # displays editor functionality once per loop
+    terminal.display_editor(pygame_events, pressed_keys, mouse_x, mouse_y, mouse_pressed)
+    terminal.on_tick()
 
     pygame.display.flip()  # Refresh on-screen display
     clock.tick(30)  # wait until next frame (at 30 FPS)

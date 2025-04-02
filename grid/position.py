@@ -20,6 +20,8 @@ class Position:
     def add(self, vector: Vector):
         return Position(self.x + vector.x, self.y + vector.y)
 
+    def __repr__(self):
+        return f"({self.x}, {self.y})"
 
 
 
