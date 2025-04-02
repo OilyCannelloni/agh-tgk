@@ -1,11 +1,9 @@
-from abc import ABC
+import itertools
 from random import random, randint
 
-import pygame
-
-from entities.base import Entity, BaseSprite, HackableEntity, HackableMethod
-from grid.grid import Grid
+from entities.base import *
 from grid.position import Position
+from grid.grid import Grid
 
 grid = Grid()
 
@@ -25,23 +23,31 @@ class WallSegment(Entity, ABC):
         else:
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
-
-        hb = pygame.Rect(self.position.x, self.position.y, self.width, self.height)
-        super().__init__(position=start, hitbox=hb)
-
-        print(start, end, hb)
-
+        main_hb = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width, height=self.height)
+        super().__init__(position=start, main_hitbox=main_hb)
 
         self.sprite = BaseSprite(
             pygame.Surface([self.width, self.height]),
             pygame.Rect(self.position.x, self.position.y, self.width, self.height))
         self.sprite.image.fill(pygame.color.Color(color))
 
-    def is_passable_for(self, entity: "Entity"):
-        return False
 
-    def on_collision_with(self, entity: "Entity"):
-        pass
+class ExampleInteractable(InteractableEntity):
+    def __init__(self, position: Position):
+        main_hb = MainHitbox(owner=self, x=position.x, y=position.y, width=50, height=50)
+        super().__init__(position=position, main_hitbox=main_hb)
+
+        self.color_cycle = itertools.cycle(("red", "green", "blue"))
+        self.sprite = BaseSprite(
+            pygame.Surface([50, 50]),
+            pygame.Rect(position.x, position.y, 50, 50)
+        )
+        self.sprite.image.fill(pygame.Color(next(self.color_cycle)))
+
+    def on_player_interaction(self):
+        color = next(self.color_cycle)
+        self.sprite.image.fill(pygame.Color(color))
+
 
 
 class WallBuilder(HackableEntity, ABC):

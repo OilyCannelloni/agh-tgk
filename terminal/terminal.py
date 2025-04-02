@@ -37,7 +37,7 @@ class Terminal(TextEditor):
                                      Terminal.OFFSET_Y - Terminal.BORDER_WIDTH, Terminal.WIDTH, Terminal.HEIGHT)
         self.line_start_y += 5
         self.initialize()
-        self.input = pp.Input()
+        self.input = None
         self.button = pp.Button(
             input=self.input,
             position=(Terminal.OFFSET_X + Terminal.WIDTH // 2, Terminal.OFFSET_Y + Terminal.HEIGHT + 20),
@@ -58,6 +58,8 @@ class Terminal(TextEditor):
     def set_active_entity(self, entity: "HackableEntity"):
         self.active_entity = entity
 
+    def set_input(self, input_):
+        self.input = input_
 
     def set_enabled(self, enable: bool):
         self.enabled = enable
@@ -115,8 +117,8 @@ class Terminal(TextEditor):
         self.button.update()
 
 
-        if mouse_pressed[0]:
-            if self.rect.collidepoint(mouse_x, mouse_y):
+        if self.input.isMouseButtonPressed(0):
+            if self.rect.collidepoint(self.input.currentMousePosition[0], self.input.currentMousePosition[1]):
                 self.set_enabled(True)
             else:
                 self.set_enabled(False)
