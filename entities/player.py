@@ -17,7 +17,8 @@ class Player(MovableEntity, ABC):
         self.add_on_game_tick(self.__get_movement_vector, 0)
         self.add_on_game_tick(self.__move, 100)
 
-        self.sprite = BaseSprite(pygame.Surface([20, 20]), pygame.Rect(self.position.x, self.position.y, 20, 20))
+        self.sprite = BaseSprite(image=pygame.Surface([20, 20]),
+                                 rect=pygame.Rect(self.position.x, self.position.y, 20, 20))
         self.sprite.image.fill(pygame.color.Color("green"))
         self.current_movement_vector = Vector(0, 0)
 

@@ -27,8 +27,8 @@ class WallSegment(Entity, ABC):
         super().__init__(position=start, main_hitbox=main_hb)
 
         self.sprite = BaseSprite(
-            pygame.Surface([self.width, self.height]),
-            pygame.Rect(self.position.x, self.position.y, self.width, self.height))
+            image=pygame.Surface([self.width, self.height]),
+            rect=pygame.Rect(self.position.x, self.position.y, self.width, self.height))
         self.sprite.image.fill(pygame.color.Color(color))
 
 
@@ -39,8 +39,8 @@ class ExampleInteractable(InteractableEntity):
 
         self.color_cycle = itertools.cycle(("red", "green", "blue"))
         self.sprite = BaseSprite(
-            pygame.Surface([50, 50]),
-            pygame.Rect(position.x, position.y, 50, 50)
+            image=pygame.Surface([50, 50]),
+            rect=pygame.Rect(position.x, position.y, 50, 50)
         )
         self.sprite.image.fill(pygame.Color(next(self.color_cycle)))
 
@@ -53,13 +53,13 @@ class ExampleInteractable(InteractableEntity):
 class WallBuilder(HackableEntity, ABC):
     def __init__(self, position: Position):
         super().__init__()
-        self.sprite = BaseSprite(pygame.Surface([20, 20]), pygame.Rect(position.x, position.y, 20, 20))
+        self.sprite = BaseSprite(image=pygame.Surface([20, 20]), rect=pygame.Rect(position.x, position.y, 20, 20))
         self.sprite.image.fill(pygame.color.Color("pink"))
         self.add_on_game_tick(self.build_wall, 50)
         self.display_hackable_methods()
 
     @HackableMethod
-    def build_wall(self, *args, **kwargs):
+    def build_wall(self, **kwargs):
         if random() > 0.02:
             return
 
