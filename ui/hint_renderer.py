@@ -1,7 +1,18 @@
 import pygame
 
+from grid.grid import Grid
+
+grid = Grid()
+
 
 class GameHintRenderer:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = object.__new__(cls, *args, **kwargs)
+        return cls._instance
+
     def __init__(self):
         self._screen = None
         self._font = None
@@ -39,6 +50,9 @@ class GameHintRenderer:
         if not self._screen:
             raise RuntimeError("GameHintRenderer not initialized. Call initialize(screen) first.")
 
+        if self._hint_surface is not None and self._hint_rect is not None:
+            return
+
         hint_surfaces = [self._create_hint_surface(key, text) for key, text in self._interaction_hints]
 
         total_width = sum(surface.get_width() for surface in hint_surfaces) + 10 * (len(hint_surfaces) - 1)
@@ -60,6 +74,8 @@ class GameHintRenderer:
     def clear_hint(self):
         self._hint_surface = None
         self._hint_rect = None
+        grid.current_interactable_entity = None
+
 
     def render(self):
         if not self._screen:

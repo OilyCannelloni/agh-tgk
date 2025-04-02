@@ -5,10 +5,9 @@ from collections.abc import Callable
 import pygame
 
 from entities.entity_library import EntityLibrary
-from entities.types import EntityType
 from grid.position import *
 from grid.grid import Grid
-from entities.types import EntityType
+from entities.types import EntityType, TickData, HitboxType
 from ui.hint_renderer import hint_renderer
 from hacking.hackable_method import HackableMethod
 from terminal.terminal import Terminal
@@ -31,15 +30,17 @@ class BaseSprite(pygame.sprite.Sprite):
 
 
 class Hitbox(pygame.Rect, ABC):
-    def __init__(self, x, y, width, height):
+    def __init__(self, *, owner: "Entity", x, y, width, height):
         super().__init__(x, y, width, height)
+        self.owner = owner
 
     def move(self, x, y) -> 'Hitbox':
         new_hitbox = type(self)(
-            self.x + x,
-            self.y + y,
-            self.width,
-            self.height
+            owner=self.owner,
+            x=self.x + x,
+            y=self.y + y,
+            width=self.width,
+            height=self.height
         )
         return new_hitbox
 
@@ -52,21 +53,31 @@ class Hitbox(pygame.Rect, ABC):
         pass
 
 
-class PlayerInteractHitbox(Hitbox, ABC):
+class MainHitbox(Hitbox, ABC):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.type = HitboxType.MAIN
+
     def on_collision_with(self, e: "Entity") -> None:
-        if e.type == EntityType.PLAYER:
-            hint_renderer.show_hint()
-
-    def is_passable_for(self, e: "Entity") -> bool:
-        return True
-
-
-class BlockingHitbox(Hitbox, ABC):
-    def on_collision_with(self, e: "Entity") -> None:
-        pass
+        self.owner.on_collision_with(e)
 
     def is_passable_for(self, e: "Entity") -> bool:
         return False
+
+
+class PlayerInteractHitbox(Hitbox, ABC):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        assert isinstance(self.owner, InteractableEntity)
+        self.type = HitboxType.OTHER
+
+    def on_collision_with(self, e: "Entity") -> None:
+        if e.type == EntityType.PLAYER:
+            hint_renderer.show_hint()
+            grid.current_interactable_entity = self.owner
+
+    def is_passable_for(self, e: "Entity") -> bool:
+        return True
 
 
 @dataclass
@@ -76,21 +87,27 @@ class Entity(ABC):
     """
     type: EntityType = EntityType.DEFAULT
 
-    def __init__(self, position=None, hitboxes=None):
+    def __init__(self, position=None, main_hitbox=None, hitboxes=None):
         self.position = position or Position(0, 0)
         self.sprite = None
         EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
-        self.hitboxes = hitboxes or [BlockingHitbox(self.position.x, self.position.y, 20, 20)]
+
+        self.main_hitbox = main_hitbox or MainHitbox(owner=self,
+                                            x=self.position.x, y=self.position.y, width=20, height=20)
+        self.hitboxes = hitboxes or []
 
     def get_hitbox(self, hitbox_type: type):
         for hitbox in self.hitboxes:
             if isinstance(hitbox, hitbox_type):
                 return hitbox
 
-    def on_collision_with(self, entity: "Entity"):
-        pass
+    def get_hitboxes(self):
+        return self.main_hitbox, *self.hitboxes
 
     def is_passable_for(self, entity: "Entity"):
+        return False
+
+    def on_collision_with(self, entity: "Entity"):
         pass
 
 
@@ -110,9 +127,9 @@ class DynamicEntity(Entity, ABC):
         super().__init__(position=position)
         self.game_tick_events: list[GameTickAction] = []
 
-    def on_game_tick(self, **data):
+    def on_game_tick(self, tick_data: TickData):
         for gta in self.game_tick_events:
-            gta.action(**data)
+            gta.action(tick_data=tick_data)
 
     def add_on_game_tick(self, action: Callable, priority: int) -> None:
         """
@@ -135,26 +152,27 @@ class MovableEntity(DynamicEntity, ABC):
         self.add_on_game_tick(self.__update_sprite_position, 1000)
 
     def _move(self, vector: Vector):
-        new_hitboxes = [hb.move(vector.x, vector.y) for hb in self.hitboxes]
-        new_interactable = None
+        new_main_hitbox = self.main_hitbox.move(vector.x, vector.y)
+        interactable_found = False
 
-        for new_hitbox in new_hitboxes:
-            for target in grid.get_all_colliding_objects(new_hitbox):
-                if target is self:
-                    continue
-                target.on_collision_with(self)
-                self.on_collision_with(target)
-                if not target.is_passable_for(self):
+        for target_hb in grid.get_all_colliding_hitboxes(new_main_hitbox):
+            if target_hb.owner is self:
+                continue
+            target_hb.on_collision_with(self)
+            if target_hb.type == HitboxType.MAIN:
+                self.on_collision_with(target_hb.owner)
+                if not target_hb.owner.is_passable_for(self):
                     return
 
-                if isinstance(target, InteractableEntity) and new_interactable is None:
-                    new_interactable = target
+            if isinstance(target_hb.owner, InteractableEntity):
+                interactable_found = True
 
         self.position = self.position.add(vector)
+        self.main_hitbox.move_ip(vector.x, vector.y)
         for i in range(len(self.hitboxes)):
-            self.hitboxes[i] = new_hitboxes[i]
+            self.hitboxes[i].move_ip(vector.x, vector.y)
 
-        if new_interactable is None and (vector.x != 0 or vector.y != 0):
+        if not interactable_found:
             hint_renderer.clear_hint()
 
     def __update_sprite_position(self, **data):
@@ -162,18 +180,19 @@ class MovableEntity(DynamicEntity, ABC):
 
 
 class InteractableEntity(Entity, ABC):
-    def __init__(self, position=None, hitboxes=None):
-        super().__init__(position, hitboxes=hitboxes or [PlayerInteractHitbox(self.position.x, self.position.y, 20, 20)])
+    def __init__(self, *, position=None, hitboxes=None, interact_hitbox: PlayerInteractHitbox = None, **kwargs):
+        if hitboxes is None:
+            hitboxes = []
+        hitboxes.append(interact_hitbox or PlayerInteractHitbox(
+                                    owner=self,
+                                    x=position.x - 5, y=position.y - 5, width=30, height=30))
+        super().__init__(position=position, hitboxes=hitboxes, **kwargs)
 
-    def on_collision_with(self, entity: "Entity"):
-        for hb in self.hitboxes:
-            hb.on_collision_with(entity)
+    @abstractmethod
+    def on_player_interaction(self):
+        pass
 
-    def is_passable_for(self, entity: "Entity"):
-        for hb in self.hitboxes:
-            if not hb.is_passable_for(entity):
-                return False
-        return True
+
 
 class HackableEntity(DynamicEntity, ABC):
     """

@@ -4,6 +4,7 @@ import pygame
 from grid.position import *
 from .base import BaseSprite, MovableEntity
 from entities.types import EntityType
+import pygamepal as pp
 
 
 @dataclass
@@ -21,21 +22,23 @@ class Player(MovableEntity, ABC):
         self.current_movement_vector = Vector(0, 0)
 
     def __get_movement_vector(self, **data):
-        if len(keys := data.get("keys_down", [])) == 0:
+        pp_input: pp.Input = data.get("tick_data").pp_input
+        if pp_input is None:
             self.current_movement_vector = Vector(0, 0)
             return
 
         vector = Vector(0, 0)
-        if keys[pygame.K_a]:
+        if pp_input.isKeyDown(pygame.K_a):
             vector = vector.add(LEFT)
-        if keys[pygame.K_w]:
+        if pp_input.isKeyDown(pygame.K_w):
             vector = vector.add(UP)
-        if keys[pygame.K_d]:
+        if pp_input.isKeyDown(pygame.K_d):
             vector = vector.add(RIGHT)
-        if keys[pygame.K_s]:
+        if pp_input.isKeyDown(pygame.K_s):
             vector = vector.add(DOWN)
         self.current_movement_vector = vector.scale(self.speed)
 
     def __move(self, **data):
         super()._move(self.current_movement_vector)
+
 
