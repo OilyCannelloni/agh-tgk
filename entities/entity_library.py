@@ -8,5 +8,5 @@ class EntityLibrary:
             EntityLibrary._entity_dict[name] = cls
 
     @staticmethod
-    def create_entity(name: str, *args, **kwargs):
-        return EntityLibrary._entity_dict[name](*args, **kwargs)
+    def create_entity(name: str, **kwargs):
+        return EntityLibrary._entity_dict[name](**kwargs)

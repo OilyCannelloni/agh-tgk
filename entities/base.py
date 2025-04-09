@@ -19,7 +19,7 @@ class BaseSprite(pygame.sprite.Sprite):
     """
     Use this to create sprites for entities
     """
-    def __init__(self, image: pygame.Surface, rect: pygame.rect.Rect):
+    def __init__(self, *, image: pygame.Surface, rect: pygame.rect.Rect):
         super().__init__()
         self.image = image
         self.rect = rect
@@ -87,7 +87,7 @@ class Entity(ABC):
     """
     type: EntityType = EntityType.DEFAULT
 
-    def __init__(self, position=None, main_hitbox=None, hitboxes=None):
+    def __init__(self, *, position=None, main_hitbox=None, hitboxes=None):
         self.position = position or Position(0, 0)
         self.sprite = None
         EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
@@ -123,11 +123,15 @@ class DynamicEntity(Entity, ABC):
     """
     type = EntityType.DYNAMIC
 
-    def __init__(self, *, position=None, **kwargs):
-        super().__init__(position=position, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.game_tick_events: list[GameTickAction] = []
 
     def on_game_tick(self, tick_data: TickData):
+        """
+        Runs all actions assigned to this entity in order of their priority
+        :param tick_data: Information about the current tick
+        """
         for gta in self.game_tick_events:
             gta.action(tick_data=tick_data)
 
@@ -145,10 +149,9 @@ class DynamicEntity(Entity, ABC):
 
 
 class MovableEntity(DynamicEntity, ABC):
-    def __init__(self, position=None):
-        super().__init__(position=position)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.type = super().type | EntityType.MOVABLE
-        print(self.type)
         self.add_on_game_tick(self.__update_sprite_position, 1000)
 
     def _move(self, vector: Vector):
@@ -172,10 +175,12 @@ class MovableEntity(DynamicEntity, ABC):
         for i in range(len(self.hitboxes)):
             self.hitboxes[i].move_ip(vector.x, vector.y)
 
+        # TODO: Move everything connected with player's interaction to Player class
+        # As for now we can't make drones
         if not interactable_found:
             hint_renderer.clear_hint()
 
-    def __update_sprite_position(self, **data):
+    def __update_sprite_position(self, **kwargs):
         self.sprite.update_position(self.position)
 
 
@@ -183,6 +188,8 @@ class InteractableEntity(Entity, ABC):
     def __init__(self, *, position=None, hitboxes=None, interact_hitbox: PlayerInteractHitbox = None, **kwargs):
         if hitboxes is None:
             hitboxes = []
+
+        # TODO this should depend on self.height/width
         hitboxes.append(interact_hitbox or PlayerInteractHitbox(
                                     owner=self,
                                     x=position.x - 5, y=position.y - 5, width=30, height=30))
@@ -191,6 +198,10 @@ class InteractableEntity(Entity, ABC):
 
     @abstractmethod
     def on_player_interaction(self):
+        """
+        This method is called when the player presses E while near this entity.
+        :return:
+        """
         pass
 
 
