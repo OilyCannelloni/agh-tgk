@@ -8,7 +8,9 @@ class EntityType(Flag):
     DEFAULT = 0
     DYNAMIC = 1
     MOVABLE = 2
-    PLAYER = 3
+    PLAYER = 4
+    HACKABLE = 8
+    INTERACTABLE = 16
 
 
 class HitboxType(Enum):
@@ -18,5 +20,5 @@ class HitboxType(Enum):
 
 @dataclass
 class TickData:
-    pp_input: pp.Input
+    pp_input: pp.Input = None
 

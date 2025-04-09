@@ -9,7 +9,7 @@ from .position import Position
 from entities.types import EntityType, TickData
 
 if TYPE_CHECKING:
-    from entities.base import Entity, DynamicEntity, InteractableEntity
+    from entities.base import Entity, DynamicEntity, InteractableEntity, HackableEntity
 
 
 @dataclass
@@ -38,7 +38,7 @@ class Grid:
         self.sprites.add(entity.sprite)
 
         self.entities.append(entity)
-        if entity.type & EntityType.DYNAMIC:
+        if EntityType.DYNAMIC in entity.type:
             self.dynamic_entities.append(entity)
 
     def place_entity(self, entity_name: str, position: "Position" = None, **kwargs):
@@ -78,4 +78,6 @@ class Grid:
                 self.current_interactable_entity.on_player_interaction()
 
         if key_input.isKeyPressed(pygame.K_t):
-            print("TTT")
+            if EntityType.HACKABLE in self.current_interactable_entity.type:
+                self.current_interactable_entity: HackableEntity
+                self.current_interactable_entity.display_hackable_methods()
