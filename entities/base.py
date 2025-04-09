@@ -72,7 +72,7 @@ class PlayerInteractHitbox(Hitbox, ABC):
         self.type = HitboxType.OTHER
 
     def on_collision_with(self, e: "Entity") -> None:
-        if e.type == EntityType.PLAYER:
+        if EntityType.PLAYER in e.type:
             hint_renderer.show_hint()
             grid.current_interactable_entity = self.owner
 
@@ -123,8 +123,8 @@ class DynamicEntity(Entity, ABC):
     """
     type = EntityType.DYNAMIC
 
-    def __init__(self, position=None):
-        super().__init__(position=position)
+    def __init__(self, *, position=None, **kwargs):
+        super().__init__(position=position, **kwargs)
         self.game_tick_events: list[GameTickAction] = []
 
     def on_game_tick(self, tick_data: TickData):
@@ -145,10 +145,10 @@ class DynamicEntity(Entity, ABC):
 
 
 class MovableEntity(DynamicEntity, ABC):
-    type = EntityType.DYNAMIC | EntityType.MOVABLE
-
     def __init__(self, position=None):
         super().__init__(position=position)
+        self.type = super().type | EntityType.MOVABLE
+        print(self.type)
         self.add_on_game_tick(self.__update_sprite_position, 1000)
 
     def _move(self, vector: Vector):
@@ -164,7 +164,7 @@ class MovableEntity(DynamicEntity, ABC):
                 if not target_hb.owner.is_passable_for(self):
                     return
 
-            if isinstance(target_hb.owner, InteractableEntity):
+            if EntityType.INTERACTABLE in target_hb.owner.type:
                 interactable_found = True
 
         self.position = self.position.add(vector)
@@ -187,6 +187,7 @@ class InteractableEntity(Entity, ABC):
                                     owner=self,
                                     x=position.x - 5, y=position.y - 5, width=30, height=30))
         super().__init__(position=position, hitboxes=hitboxes, **kwargs)
+        self.type |= EntityType.INTERACTABLE
 
     @abstractmethod
     def on_player_interaction(self):
@@ -198,12 +199,13 @@ class HackableEntity(DynamicEntity, ABC):
     """
     Describes an entity type the behavior of which can be altered by the user.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.type |= EntityType.HACKABLE
         self._terminal = Terminal()
         self._hackable_method_names = None
 
-    def _get_hackable_method_names(self):
+    def get_hackable_method_names(self):
         if self._hackable_method_names is not None:
             return self._hackable_method_names
         self._hackable_method_names = list(HackableMethod.get_all_hackable_methods(self.__class__).keys())
@@ -227,4 +229,4 @@ class HackableEntity(DynamicEntity, ABC):
         """
         Applies the code from the terminal to overwrite the hackable methods of the inheriting class
         """
-        HackableMethod.apply_code(code, self.__class__.__name__, self._get_hackable_method_names())
+        HackableMethod.apply_code(code, self)

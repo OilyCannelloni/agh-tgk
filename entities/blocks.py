@@ -32,7 +32,7 @@ class WallSegment(Entity, ABC):
         self.sprite.image.fill(pygame.color.Color(color))
 
 
-class ExampleInteractable(InteractableEntity):
+class ExampleInteractable(InteractableEntity, HackableEntity):
     def __init__(self, position: Position):
         main_hb = MainHitbox(owner=self, x=position.x, y=position.y, width=50, height=50)
         super().__init__(position=position, main_hitbox=main_hb)
@@ -44,10 +44,17 @@ class ExampleInteractable(InteractableEntity):
         )
         self.sprite.image.fill(pygame.Color(next(self.color_cycle)))
 
-    def on_player_interaction(self):
-        color = next(self.color_cycle)
+    def set_color(self, color):
         self.sprite.image.fill(pygame.Color(color))
 
+    def set_color_cycle(self, colors: tuple[str]):
+        self.color_cycle = itertools.cycle(colors)
+
+    @HackableMethod
+    def on_player_interaction(self):
+        # next(self.color_cycle) # try uncommenting me!
+        color = next(self.color_cycle)
+        self.set_color(color)
 
 
 class WallBuilder(HackableEntity, ABC):

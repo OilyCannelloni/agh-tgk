@@ -10,10 +10,10 @@ import pygamepal as pp
 @dataclass
 class Player(MovableEntity, ABC):
     speed = 4
-    type = EntityType.PLAYER
 
     def __init__(self, position=None):
         super().__init__(position=position)
+        self.type |= EntityType.PLAYER
         self.add_on_game_tick(self.__get_movement_vector, 0)
         self.add_on_game_tick(self.__move, 100)
 

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import pygame
 from pygame_texteditor import TextEditor
 import pygamepal as pp
+from pygamepal import Input
 
 if TYPE_CHECKING:
     from entities.base import HackableEntity
@@ -21,7 +22,7 @@ class Terminal(TextEditor):
             cls._instance = object.__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, input_: pp.Input = None):
         super().__init__(offset_x=Terminal.OFFSET_X, offset_y=Terminal.OFFSET_Y,
                          editor_width=Terminal.WIDTH, editor_height=Terminal.HEIGHT,
                          screen=pygame.display.get_surface())
@@ -37,7 +38,7 @@ class Terminal(TextEditor):
                                      Terminal.OFFSET_Y - Terminal.BORDER_WIDTH, Terminal.WIDTH, Terminal.HEIGHT)
         self.line_start_y += 5
         self.initialize()
-        self.input = None
+        self.input: Input = input_
         self.button = pp.Button(
             input=self.input,
             position=(Terminal.OFFSET_X + Terminal.WIDTH // 2, Terminal.OFFSET_Y + Terminal.HEIGHT + 20),
@@ -58,15 +59,15 @@ class Terminal(TextEditor):
     def set_active_entity(self, entity: "HackableEntity"):
         self.active_entity = entity
 
-    def set_input(self, input_):
-        self.input = input_
-
     def set_enabled(self, enable: bool):
         self.enabled = enable
         if enable:
             self.color_coding_background = (40, 40, 40)
         else:
             self.color_coding_background = (70, 70, 70)
+
+    def is_enabled(self):
+        return self.enabled
 
 
     def initialize(self):
@@ -102,20 +103,14 @@ class Terminal(TextEditor):
                 * self.line_height_including_margin
         )
 
-    def display_editor(self, pygame_events, pressed_keys, mouse_x, mouse_y, mouse_pressed):
+    def display_terminal(self, pygame_events, pressed_keys):
         """Display the editor.
-
         The function should be called once within every pygame loop.
-
         :param pygame_events:
         :param pressed_keys:
-        :param mouse_x:
-        :param mouse_y:
-        :param mouse_pressed:
         """
         self.input.update()
         self.button.update()
-
 
         if self.input.isMouseButtonPressed(0):
             if self.rect.collidepoint(self.input.currentMousePosition[0], self.input.currentMousePosition[1]):
@@ -129,6 +124,8 @@ class Terminal(TextEditor):
         self.button.draw(self.screen)
 
         # RENDERING 2 - Line contents, caret
+        mouse_x, mouse_y = self.input.currentMousePosition
+        mouse_pressed = self.input.currentMouseButtonStates
         self.render_highlight(mouse_x, mouse_y)
         if self.syntax_highlighting_python:
             # syntax highlighting for code

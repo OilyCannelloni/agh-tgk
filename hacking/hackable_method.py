@@ -61,11 +61,13 @@ class HackableMethod:
         return HackableMethod.meth_info[owner_class.__name__]
 
     @staticmethod
-    def apply_code(code: str, class_name: str, hackable_method_names: list[str]):
+    def apply_code(code: str, self_instance):
         """
         Applies the given code to overwrite the hackable methods of the inheriting class
         """
-        scope = {}
+        class_name = self_instance.__class__.__name__
+        hackable_method_names = self_instance.get_hackable_method_names()
+        scope = {"self": self_instance}
         # “As for the end of the universe...
         # I say let it come as it will, in ice, fire, or darkness.
         # What did the universe ever do for me that I should mind its welfare?”
