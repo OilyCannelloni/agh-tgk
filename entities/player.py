@@ -12,14 +12,10 @@ class Player(MovableEntity, ABC):
     speed = 4
 
     def __init__(self, position=None):
-        super().__init__(position=position)
+        super().__init__(position=position, width=20, height=20, color="green")
         self.type |= EntityType.PLAYER
         self.add_on_game_tick(self.__get_movement_vector, 0)
         self.add_on_game_tick(self.__move, 100)
-
-        self.sprite = BaseSprite(image=pygame.Surface([20, 20]),
-                                 rect=pygame.Rect(self.position.x, self.position.y, 20, 20))
-        self.sprite.image.fill(pygame.color.Color("green"))
         self.current_movement_vector = Vector(0, 0)
 
     def __get_movement_vector(self, **data):

@@ -197,20 +197,21 @@ class MovableEntity(DynamicEntity, ABC):
 
 
 class InteractableEntity(Entity, ABC):
-    def __init__(self, interaction_offset=10, **kwargs):
+    def __init__(self, interaction_offset=5, **kwargs):
         super().__init__(**kwargs)
         if self.hitboxes is None:
             self.hitboxes = []
 
-        self.set_player_interaction_range(self.width + interaction_offset, self.height + interaction_offset)
+        self.set_player_interaction_range(interaction_offset)
         self.type |= EntityType.INTERACTABLE
 
-    def set_player_interaction_range(self, width, height):
+    def set_player_interaction_range(self, range_offset):
         """
         Sets the range of the player interaction hitbox
         """
         self.hitboxes.append(
-            PlayerInteractHitbox(owner=self, x=self.position.x - 5, y=self.position.y - 5, width=width, height=height))
+            PlayerInteractHitbox(owner=self, x=self.position.x - range_offset, y=self.position.y - range_offset,
+                                 width=self.width + 2 * range_offset, height=self.height + 2 * range_offset))
 
     @abstractmethod
     def on_player_interaction(self):
