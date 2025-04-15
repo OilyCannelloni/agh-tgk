@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 
 
 class Terminal(TextEditor):
-    OFFSET_X = 1200
-    OFFSET_Y = 200
-    WIDTH = 700
-    HEIGHT = 800
+    OFFSET_X = 720
+    OFFSET_Y = 120
+    WIDTH = 420
+    HEIGHT = 480
     BORDER_WIDTH = 5
 
     _instance = None
@@ -29,7 +29,7 @@ class Terminal(TextEditor):
 
         pygame.key.set_repeat(0, 0)
         self.set_syntax_highlighting(True)
-        self.set_font_size(20)
+        self.set_font_size(12)
         self.set_drag_end_after_last_line()
         self.set_line_numbers(True)
         self.enabled = False
