@@ -11,7 +11,7 @@ from terminal.terminal import Terminal
 from grid.grid import Grid
 
 pygame.init()
-screen = pygame.display.set_mode((2000,1200))
+screen = pygame.display.set_mode((1200, 720))
 clock = pygame.time.Clock()
 
 hint_renderer.initialize(screen)

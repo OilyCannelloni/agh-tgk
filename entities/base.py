@@ -19,6 +19,7 @@ class BaseSprite(pygame.sprite.Sprite):
     """
     Use this to create sprites for entities
     """
+
     def __init__(self, *, image: pygame.Surface, rect: pygame.rect.Rect):
         super().__init__()
         self.image = image
@@ -87,14 +88,25 @@ class Entity(ABC):
     """
     type: EntityType = EntityType.DEFAULT
 
-    def __init__(self, *, position=None, main_hitbox=None, hitboxes=None):
+    def __init__(self, *, position=None, width=50, height=50, color="white"):
         self.position = position or Position(0, 0)
-        self.sprite = None
         EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
+        self.set_size(width, height)
+        self.set_sprite(color)
+        self.hitboxes = []
 
-        self.main_hitbox = main_hitbox or MainHitbox(owner=self,
-                                            x=self.position.x, y=self.position.y, width=20, height=20)
-        self.hitboxes = hitboxes or []
+    def set_size(self, width, height):
+        self.width = width
+        self.height = height
+        self.main_hitbox = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width,
+                                      height=self.height)
+
+    def set_sprite(self, color):
+        self.sprite = BaseSprite(
+            image=pygame.Surface((self.width, self.height)),
+            rect=pygame.Rect(self.position.x, self.position.y, self.width, self.height)
+        )
+        self.sprite.image.fill(pygame.color.Color(color))
 
     def get_hitbox(self, hitbox_type: type):
         for hitbox in self.hitboxes:
@@ -185,16 +197,21 @@ class MovableEntity(DynamicEntity, ABC):
 
 
 class InteractableEntity(Entity, ABC):
-    def __init__(self, *, position=None, hitboxes=None, interact_hitbox: PlayerInteractHitbox = None, **kwargs):
-        if hitboxes is None:
-            hitboxes = []
+    def __init__(self, interaction_offset=5, **kwargs):
+        super().__init__(**kwargs)
+        if self.hitboxes is None:
+            self.hitboxes = []
 
-        # TODO this should depend on self.height/width
-        hitboxes.append(interact_hitbox or PlayerInteractHitbox(
-                                    owner=self,
-                                    x=position.x - 5, y=position.y - 5, width=30, height=30))
-        super().__init__(position=position, hitboxes=hitboxes, **kwargs)
+        self.set_player_interaction_range(interaction_offset)
         self.type |= EntityType.INTERACTABLE
+
+    def set_player_interaction_range(self, range_offset):
+        """
+        Sets the range of the player interaction hitbox
+        """
+        self.hitboxes.append(
+            PlayerInteractHitbox(owner=self, x=self.position.x - range_offset, y=self.position.y - range_offset,
+                                 width=self.width + 2 * range_offset, height=self.height + 2 * range_offset))
 
     @abstractmethod
     def on_player_interaction(self):
@@ -205,11 +222,11 @@ class InteractableEntity(Entity, ABC):
         pass
 
 
-
 class HackableEntity(DynamicEntity, ABC):
     """
     Describes an entity type the behavior of which can be altered by the user.
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type |= EntityType.HACKABLE
