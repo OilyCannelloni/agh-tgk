@@ -51,6 +51,15 @@ class Grid:
         entity = EntityLibrary.create_entity(entity_name, position=position, **kwargs)
         self.place_existing_entity(entity, position)
 
+    def clear(self):
+        """
+        Removes all entities
+        """
+        self.sprites = pygame.sprite.Group()
+        self.dynamic_entities = []
+        self.entities = []
+        self.current_interactable_entity = None
+
     def process_dynamic_entities(self, tick_data: TickData):
         """
         Calls all tick actions for all dynamic entities.

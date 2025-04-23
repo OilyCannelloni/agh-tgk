@@ -1,13 +1,9 @@
 import pygame
 import pygamepal as pp
-
-from entities.blocks import WallSegment
-from entities.doors import OpenableDoor, DoorButton
-from entities.player import Player
 from entities.types import TickData
 
-from grid.position import Position
 from levels.test_door import LevelTestDoor
+
 from ui.hint_renderer import hint_renderer
 from terminal.terminal import Terminal
 from grid.grid import Grid

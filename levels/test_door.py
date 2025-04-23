@@ -1,4 +1,5 @@
 from entities.blocks import WallSegment
+from entities.common import Exit
 from entities.doors import OpenableDoor, DoorButton
 from entities.entity_library import EntityLibrary
 from entities.player import Player
@@ -11,6 +12,7 @@ grid = Grid()
 class LevelTestDoor(Level):
     @staticmethod
     def load():
+        grid.clear()
         grid.place_existing_entity(WallSegment(Position(200, 0), Position(200, 100)))
         grid.place_existing_entity(WallSegment(Position(200, 150), Position(200, 500)))
         grid.place_existing_entity(WallSegment(Position(10, 500), Position(200, 500)))
@@ -20,3 +22,4 @@ class LevelTestDoor(Level):
         button.set_target_door(door)
         grid.place_existing_entity(button)
         grid.place_existing_entity(Player(Position(100, 100)))
+        grid.place_existing_entity(Exit(Position(300, 200), LevelTestDoor.load))

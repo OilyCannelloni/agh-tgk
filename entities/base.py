@@ -89,7 +89,7 @@ class Entity(ABC):
     type: EntityType = EntityType.DEFAULT
 
     def __init__(self, *, position=None, width=50, height=50, color="white"):
-        self.sprite = None
+        self.sprite: BaseSprite = None
         self.main_hitbox = None
         self.height = None
         self.width = None
