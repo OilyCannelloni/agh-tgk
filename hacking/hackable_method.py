@@ -111,6 +111,7 @@ class HackableMethod:
         # I say let it come as it will, in ice, fire, or darkness.
         # What did the universe ever do for me that I should mind its welfare?”
         HackableMethod.hacker_scope = True
+        print(code)
         exec(code, None, scope)
         HackableMethod.hacker_scope = False
 

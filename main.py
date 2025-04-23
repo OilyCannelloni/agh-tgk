@@ -17,6 +17,9 @@ clock = pygame.time.Clock()
 
 hint_renderer.initialize(screen)
 
+pp_input = pp.Input()
+terminal = Terminal(pp_input)
+
 grid = Grid()
 grid.place_existing_entity(WallSegment(Position(200, 0), Position(200, 100)))
 grid.place_existing_entity(WallSegment(Position(200, 150), Position(200, 500)))
@@ -28,10 +31,6 @@ button.set_target_door(door)
 grid.place_existing_entity(button)
 grid.place_existing_entity(Player(Position(100, 100)))
 
-
-
-pp_input = pp.Input()
-terminal = Terminal(pp_input)
 
 tick_data = TickData(0, pp_input)
 
