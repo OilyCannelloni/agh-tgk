@@ -4,6 +4,7 @@ from random import random, randint
 from entities.base import *
 from grid.position import Position
 from grid.grid import Grid
+from hacking.hackable_method import CallableMethod
 
 grid = Grid()
 
@@ -19,7 +20,7 @@ class WallSegment(Entity, ABC):
         elif start.y == end.y:
             height = WallSegment.THICKNESS
             width = abs(start.x - end.x)
-            position = Position(start.y, min(start.x, end.x))
+            position = Position(min(start.x, end.x), start.y)
         else:
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
@@ -34,11 +35,12 @@ class ExampleInteractable(InteractableEntity, HackableEntity):
     def set_color(self, color):
         self.sprite.image.fill(pygame.Color(color))
 
+    @CallableMethod
     def set_color_cycle(self, colors: tuple[str]):
         self.color_cycle = itertools.cycle(colors)
 
     @HackableMethod
-    def on_player_interaction(self):
+    def on_player_interaction(self, tick_data: TickData):
         # next(self.color_cycle) # try uncommenting me!
         color = next(self.color_cycle)
         self.set_color(color)
