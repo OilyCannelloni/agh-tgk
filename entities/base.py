@@ -89,6 +89,11 @@ class Entity(ABC):
     type: EntityType = EntityType.DEFAULT
 
     def __init__(self, *, position=None, width=50, height=50, color="white"):
+        self.sprite = None
+        self.main_hitbox = None
+        self.height = None
+        self.width = None
+        self.color = color
         self.position = position or Position(0, 0)
         EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
         self.set_size(width, height)
@@ -100,13 +105,18 @@ class Entity(ABC):
         self.height = height
         self.main_hitbox = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width,
                                       height=self.height)
+        self.set_sprite(self.color)
 
     def set_sprite(self, color):
+        self.color = color
+        if self.sprite is not None:
+            self.sprite.remove(grid.sprites)
         self.sprite = BaseSprite(
             image=pygame.Surface((self.width, self.height)),
             rect=pygame.Rect(self.position.x, self.position.y, self.width, self.height)
         )
         self.sprite.image.fill(pygame.color.Color(color))
+        self.sprite.add(grid.sprites)
 
     def get_hitbox(self, hitbox_type: type):
         for hitbox in self.hitboxes:
@@ -214,7 +224,7 @@ class InteractableEntity(Entity, ABC):
                                  width=self.width + 2 * range_offset, height=self.height + 2 * range_offset))
 
     @abstractmethod
-    def on_player_interaction(self):
+    def on_player_interaction(self, tick_data: TickData):
         """
         This method is called when the player presses E while near this entity.
         :return:
@@ -232,6 +242,12 @@ class HackableEntity(DynamicEntity, ABC):
         self.type |= EntityType.HACKABLE
         self._terminal = Terminal()
         self._hackable_method_names = None
+
+    def __getattribute__(self, name):
+        if HackableMethod.hacker_scope:
+            print("hello", name)
+        return object.__getattribute__(self, name)
+
 
     def get_hackable_method_names(self):
         if self._hackable_method_names is not None:

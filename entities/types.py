@@ -20,5 +20,6 @@ class HitboxType(Enum):
 
 @dataclass
 class TickData:
+    tick: int = 0
     pp_input: pp.Input = None
 

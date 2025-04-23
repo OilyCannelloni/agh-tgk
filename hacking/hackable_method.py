@@ -1,6 +1,9 @@
 import functools
+import inspect
+import re
 from collections import defaultdict
 from typing import Callable
+import types
 
 """
 The following imports are going to be accessible by the user
@@ -12,6 +15,35 @@ from grid.position import Position
 from grid.grid import Grid
 grid = Grid()
 
+
+class CallableMethod:
+    meth_info = defaultdict(list)
+
+    def __init__(self, meth: Callable):
+        """
+        Inserts the default body of a hackable method to meth_info dictionary.
+        """
+        self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
+        print(self.class_name, self.meth_name)
+        CallableMethod.meth_info[self.class_name].append(self.meth_name)
+        self._meth = meth
+        self.hacker_accessible = True
+
+    def __call__(self, instance, owner, *args, **kwargs):
+        """
+        Overrides the decorated method call. Calls the version stored in meth_info instead.
+        :param instance: Calling object instance
+        :param owner: Calling object type
+        :return: What the hacked method returns
+        """
+        return self._meth(instance, *args, **kwargs)
+
+    def __get__(self, instance, owner):
+        """
+        Executes before __call__ when the method is called. Provides __call__ with access
+        to the calling instance and type.
+        """
+        return functools.partial(self.__call__, instance, owner)
 
 
 class HackableMethod:
@@ -25,6 +57,7 @@ class HackableMethod:
 
     # A static dictionary containing the overwritten methods
     meth_info = defaultdict(dict)
+    hacker_scope = False
 
     def __init__(self, meth: Callable, imports=None):
         """
@@ -34,6 +67,7 @@ class HackableMethod:
         print(self.class_name, self.meth_name)
         HackableMethod.meth_info[self.class_name][self.meth_name] = meth
         self._default_meth = meth
+        self.hacker_accessible = True
 
     def __call__(self, instance, owner, *args, **kwargs):
         """
@@ -42,7 +76,10 @@ class HackableMethod:
         :param owner: Calling object type
         :return: What the hacked method returns
         """
-        return HackableMethod.meth_info[self.class_name][self.meth_name](instance, *args, **kwargs)
+        HackableMethod.hacker_scope = True
+        val = HackableMethod.meth_info[self.class_name][self.meth_name](instance, *args, **kwargs)
+        HackableMethod.hacker_scope = False
+        return val
 
     def __get__(self, instance, owner):
         """
@@ -67,11 +104,16 @@ class HackableMethod:
         """
         class_name = self_instance.__class__.__name__
         hackable_method_names = self_instance.get_hackable_method_names()
+
         scope = {"self": self_instance}
+
         # “As for the end of the universe...
         # I say let it come as it will, in ice, fire, or darkness.
         # What did the universe ever do for me that I should mind its welfare?”
+        HackableMethod.hacker_scope = True
         exec(code, None, scope)
+        HackableMethod.hacker_scope = False
+
         for var_name, var_value in scope.items():
             if var_name in hackable_method_names:
                 HackableMethod.meth_info[class_name][var_name] = var_value

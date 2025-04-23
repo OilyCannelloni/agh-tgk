@@ -1,7 +1,8 @@
 import pygame
 import pygamepal as pp
 
-from entities.blocks import WallSegment, ExampleInteractable
+from entities.blocks import WallSegment
+from entities.doors import OpenableDoor, DoorButton
 from entities.player import Player
 from entities.types import TickData
 
@@ -17,15 +18,25 @@ clock = pygame.time.Clock()
 hint_renderer.initialize(screen)
 
 grid = Grid()
-grid.place_existing_entity(Player(Position(100, 200)))
-grid.place_existing_entity(WallSegment(Position(150, 150), Position(400, 150)))
-grid.place_existing_entity(ExampleInteractable(Position(200, 200)))
+grid.place_existing_entity(WallSegment(Position(200, 0), Position(200, 100)))
+grid.place_existing_entity(WallSegment(Position(200, 150), Position(200, 500)))
+grid.place_existing_entity(WallSegment(Position(10, 500), Position(200, 500)))
+door = OpenableDoor(Position(200, 100))
+grid.place_existing_entity(door)
+button = DoorButton(Position(100, 400))
+button.set_target_door(door)
+grid.place_existing_entity(button)
+grid.place_existing_entity(Player(Position(100, 100)))
+
+
 
 pp_input = pp.Input()
 terminal = Terminal(pp_input)
 
-tick_data = TickData(pp_input)
+tick_data = TickData(0, pp_input)
+
 while True:
+    tick_data.tick += 1
     # Process player inputs.
     pygame_events = pygame.event.get()
     pressed_keys = pygame.key.get_pressed()
@@ -38,7 +49,7 @@ while True:
     # Do logical updates here.
     # ...
     if not terminal.is_enabled():
-        grid.process_player_input(tick_data.pp_input)
+        grid.process_player_input(tick_data)
         grid.process_dynamic_entities(tick_data)
     else:
         grid.process_dynamic_entities(TickData())
