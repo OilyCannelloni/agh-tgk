@@ -2,7 +2,8 @@ from abc import ABC
 import pygame
 
 from grid.position import *
-from .base import BaseSprite, MovableEntity
+from utils import tint_image
+from .base import MovableEntity
 from entities.types import EntityType
 import pygamepal as pp
 
@@ -12,7 +13,12 @@ class Player(MovableEntity, ABC):
     speed = 4
 
     def __init__(self, position=None):
-        super().__init__(position=position, width=20, height=20, color="green")
+        width = height = 30
+        image = pygame.image.load("resources/character.png").convert_alpha()
+        image = pygame.transform.scale(image, (width, height))
+        image = tint_image(image, "green")
+
+        super().__init__(position=position, width=width, height=height, color="green", custom_image=image)
         self.type |= EntityType.PLAYER
         self.add_on_game_tick(self.__get_movement_vector, 0)
         self.add_on_game_tick(self.__move, 100)
