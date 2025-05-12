@@ -1,6 +1,7 @@
-from entities.base import DynamicEntity, InteractableEntity
+from entities.base import DynamicEntity, InteractableEntity, HackableEntity
 from entities.types import TickData
 from grid.position import Position, Vector, DOWN
+from hacking.hackable_method import HackableMethod
 
 
 class BasicDoor(DynamicEntity):
@@ -25,18 +26,17 @@ class BasicDoor(DynamicEntity):
 
 class OpenableDoor(BasicDoor, InteractableEntity):
     def on_player_interaction(self, tick_data: TickData):
-        print("ee")
         if self.is_open:
             self.close()
         else:
             self.open()
 
 
-class DoorButton(DynamicEntity, InteractableEntity):
+class DoorButton(HackableEntity, InteractableEntity):
     def __init__(self, position: Position, **kwargs):
         super().__init__(position=position, width=30, height=30, color="orange", **kwargs)
         self.door: BasicDoor = None
-        self.release_tick = 0
+        self.release_tick = -1
         self.add_on_game_tick(self.on_tick, 600)
 
     def set_target_door(self, door: BasicDoor):
@@ -50,15 +50,14 @@ class DoorButton(DynamicEntity, InteractableEntity):
         if self.door is not None:
             self.door.open()
 
-    def on_player_interaction(self, tick_data: TickData):
-        print("bb")
+    @HackableMethod
+    def on_player_interaction(self, tick_data):
         self.release_tick = tick_data.tick + 50
         print(self.release_tick)
         self.click()
 
     def on_tick(self, tick_data: TickData):
         if tick_data.tick == self.release_tick:
-            print("dadw")
             self.unclick()
 
 
