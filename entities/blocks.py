@@ -27,7 +27,7 @@ class WallSegment(Entity, ABC):
         super().__init__(position=position, width=width, height=height, color=color)
 
 
-class ExampleInteractable(InteractableEntity, HackableEntity):
+class ExampleInteractable(HackableEntity):
     def __init__(self, position: Position):
         self.color_cycle = itertools.cycle(("red", "green", "blue"))
         super().__init__(position=position, width=50, height=50, color=pygame.Color(next(self.color_cycle)))

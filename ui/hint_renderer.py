@@ -1,5 +1,6 @@
 import pygame
 
+from entities.types import EntityType
 from grid.grid import Grid
 
 grid = Grid()
@@ -18,7 +19,7 @@ class GameHintRenderer:
         self._font = None
         self._hint_rect = None
         self._hint_surface = None
-        self._interaction_hints = [("E", "USE"), ("T", "HACK")]
+        self._interaction_hints = [(EntityType.INTERACTABLE, "E", "USE"), (EntityType.HACKABLE, "T", "HACK")]
 
     def initialize(self, screen):
         if not self._font:
@@ -53,7 +54,9 @@ class GameHintRenderer:
         if self._hint_surface is not None and self._hint_rect is not None:
             return
 
-        hint_surfaces = [self._create_hint_surface(key, text) for key, text in self._interaction_hints]
+        hint_surfaces = [self._create_hint_surface(key, text) for req_e_type, key, text in self._interaction_hints]
+
+        print(hint_surfaces)
 
         total_width = sum(surface.get_width() for surface in hint_surfaces) + 10 * (len(hint_surfaces) - 1)
         max_height = max(surface.get_height() for surface in hint_surfaces)

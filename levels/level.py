@@ -3,7 +3,7 @@ from entities.blocks import WallSegment
 from entities.common import Exit
 from entities.doors import OpenableDoor, DoorButton
 from entities.player import Player
-from entities.teleporter import TeleporterTarget, Teleporter
+from entities.teleporter import TeleporterTarget, Teleporter, HackableTeleporter
 from grid.position import Position
 from grid.grid import Grid
 
@@ -39,6 +39,7 @@ class LevelTeleporter(Level):
 
         tt = TeleporterTarget(Position(200, 400))
 
-        tel = Teleporter(Position(200, 200))
+        tel = HackableTeleporter(Position(200, 200))
+        print(tel.type)
         tel.set_target(tt)
 

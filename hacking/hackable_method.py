@@ -1,23 +1,62 @@
 import functools
-import inspect
-import re
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Callable
-import types
 
 """
 The following imports are going to be accessible by the user
 as all hacked methods are invoked from here
 """
 # TODO: this is to be replaced with level-defined imports
-from random import random, randint
-from grid.position import Position
+
 from grid.grid import Grid
 grid = Grid()
 
 
-class CallableMethod:
+class MethodInfoDict(ABC):
+    @staticmethod
+    @abstractmethod
+    def get_meth_info():
+        pass
+
+    @classmethod
+    def get_all_methods_of_class(cls, owner_class):
+        return cls.get_meth_info()[owner_class.__name__]
+
+
+class ReadOnlyMethod(MethodInfoDict):
     meth_info = defaultdict(list)
+
+    @staticmethod
+    def get_meth_info():
+        return ReadOnlyMethod.meth_info
+
+    def __init__(self, meth: Callable):
+        """
+        Inserts the default body of a hackable method to meth_info dictionary.
+        """
+        self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
+        ReadOnlyMethod.meth_info[self.class_name].append(self.meth_name)
+        self._meth = meth
+
+    def __call__(self, instance, owner, *args, **kwargs):
+        """
+        Overrides the decorated method call. Calls the version stored in meth_info instead.
+        :param instance: Calling object instance
+        :param owner: Calling object type
+        :return: What the hacked method returns
+        """
+        return self._meth(instance, *args, **kwargs)
+
+
+
+
+class CallableMethod(MethodInfoDict):
+    meth_info = defaultdict(list)
+
+    @staticmethod
+    def get_meth_info():
+        return CallableMethod.meth_info
 
     def __init__(self, meth: Callable):
         """
@@ -46,7 +85,7 @@ class CallableMethod:
         return functools.partial(self.__call__, instance, owner)
 
 
-class HackableMethod:
+class HackableMethod(MethodInfoDict):
     """
     A class-decorator used to describe a method, the code of which can be altered by the user.
     When creating new Entities, use
@@ -58,6 +97,10 @@ class HackableMethod:
     # A static dictionary containing the overwritten methods
     meth_info = defaultdict(dict)
     hacker_scope = False
+
+    @staticmethod
+    def get_meth_info():
+        return HackableMethod.meth_info
 
     def __init__(self, meth: Callable, imports=None):
         """
@@ -87,15 +130,6 @@ class HackableMethod:
         to the calling instance and type.
         """
         return functools.partial(self.__call__, instance, owner)
-
-    @staticmethod
-    def get_all_hackable_methods(owner_class):
-        """
-        Returns all hackable methods for a given type.
-        :param owner_class: The type.
-        :return: A dict of (method_name: method) pairs.
-        """
-        return HackableMethod.meth_info[owner_class.__name__]
 
     @staticmethod
     def apply_code(code: str, self_instance):

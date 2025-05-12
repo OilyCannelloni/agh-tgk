@@ -80,7 +80,8 @@ class Grid:
         Responds to player actions other than movement
         """
         if tick_data.pp_input.isKeyPressed(pygame.K_e):
-            if self.current_interactable_entity is not None:
+            if (self.current_interactable_entity is not None
+                        and EntityType.INTERACTABLE in self.current_interactable_entity.type):
                 self.current_interactable_entity.on_player_interaction(tick_data)
 
         if tick_data.pp_input.isKeyPressed(pygame.K_t):
