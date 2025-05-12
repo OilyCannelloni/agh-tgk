@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 import pygame
 from pygame_texteditor import TextEditor
 import pygamepal as pp
-from pygamepal import Input
 
 if TYPE_CHECKING:
     from entities.base import HackableEntity
@@ -17,19 +16,22 @@ class Terminal(TextEditor):
     BORDER_WIDTH = 5
 
     _instance = None
+    _initialized = False
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
             cls._instance = object.__new__(cls)
         return cls._instance
 
-    def __init__(self, input_: pp.Input = None):
+    def __init__(self, input: pp.Input = None):
+        if Terminal._initialized:
+            return
         super().__init__(offset_x=Terminal.OFFSET_X, offset_y=Terminal.OFFSET_Y,
                          editor_width=Terminal.WIDTH, editor_height=Terminal.HEIGHT,
                          screen=pygame.display.get_surface())
 
         pygame.key.set_repeat(0, 0)
         self.set_syntax_highlighting(True)
-        self.set_font_size(12)
+        self.set_font_size(14)
         self.set_drag_end_after_last_line()
         self.set_line_numbers(True)
         self.enabled = False
@@ -38,13 +40,15 @@ class Terminal(TextEditor):
                                      Terminal.OFFSET_Y - Terminal.BORDER_WIDTH, Terminal.WIDTH, Terminal.HEIGHT)
         self.line_start_y += 5
         self.initialize()
-        self.input: Input = input_
+        self.input: pp.Input = input
         self.button = pp.Button(
             input=self.input,
             position=(Terminal.OFFSET_X + Terminal.WIDTH // 2, Terminal.OFFSET_Y + Terminal.HEIGHT + 20),
             text = "Run code",
             onSelected=self.apply_code
         )
+        Terminal._initialized = True
+
 
     def on_tick(self):
         self.create_visual_effects()

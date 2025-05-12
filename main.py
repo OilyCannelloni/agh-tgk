@@ -1,12 +1,9 @@
 import pygame
 import pygamepal as pp
-
-from entities.blocks import WallSegment
-from entities.doors import OpenableDoor, DoorButton
-from entities.player import Player
 from entities.types import TickData
 
-from grid.position import Position
+from levels.test_door import LevelTestDoor
+
 from ui.hint_renderer import hint_renderer
 from terminal.terminal import Terminal
 from grid.grid import Grid
@@ -17,21 +14,13 @@ clock = pygame.time.Clock()
 
 hint_renderer.initialize(screen)
 
-grid = Grid()
-grid.place_existing_entity(WallSegment(Position(200, 0), Position(200, 100)))
-grid.place_existing_entity(WallSegment(Position(200, 150), Position(200, 500)))
-grid.place_existing_entity(WallSegment(Position(10, 500), Position(200, 500)))
-door = OpenableDoor(Position(200, 100))
-grid.place_existing_entity(door)
-button = DoorButton(Position(100, 400))
-button.set_target_door(door)
-grid.place_existing_entity(button)
-grid.place_existing_entity(Player(Position(100, 100)))
-
-
-
 pp_input = pp.Input()
 terminal = Terminal(pp_input)
+
+grid = Grid()
+
+LevelTestDoor.load()
+
 
 tick_data = TickData(0, pp_input)
 
