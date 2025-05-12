@@ -27,21 +27,18 @@ class Grid:
             cls._instance = object.__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def place_existing_entity(self, entity: "Entity", position: "Position" = None):
+    def register_entity(self, entity: "Entity"):
         """
         Places a previously created entity on the map
         :param entity: The entity to be placed
         :param position: Position on the map
         """
-        if position is not None:
-            entity.position = position
-        self.sprites.add(entity.sprite)
 
         self.entities.append(entity)
         if EntityType.DYNAMIC in entity.type:
             self.dynamic_entities.append(entity)
 
-    def place_entity(self, entity_name: str, position: "Position" = None, **kwargs):
+    def place_entity_by_name(self, entity_name: str, position: "Position" = None, **kwargs):
         """
         Creates and places an entity on the map
         :param entity_name: Name of the entity as registered in EntityLibrary
@@ -49,7 +46,7 @@ class Grid:
         :param kwargs: Parameters to be passed to the entity
         """
         entity = EntityLibrary.create_entity(entity_name, position=position, **kwargs)
-        self.place_existing_entity(entity, position)
+        self.register_entity(entity)
 
     def clear(self):
         """

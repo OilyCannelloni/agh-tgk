@@ -2,7 +2,7 @@ import pygame
 import pygamepal as pp
 from entities.types import TickData
 
-from levels.test_door import LevelTestDoor
+from levels.level import LevelTestDoor, LevelTeleporter
 
 from ui.hint_renderer import hint_renderer
 from terminal.terminal import Terminal
@@ -19,7 +19,7 @@ terminal = Terminal(pp_input)
 
 grid = Grid()
 
-LevelTestDoor.load()
+LevelTeleporter.load()
 
 
 tick_data = TickData(0, pp_input)

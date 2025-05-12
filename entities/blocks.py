@@ -63,7 +63,7 @@ class WallBuilder(HackableEntity, ABC):
         else:
             end = Position(randint(300, 700), start.y)
 
-        grid.place_entity("WallSegment", start, end)
+        grid.place_entity_by_name("WallSegment", start, end)
 
     @HackableMethod
     def nothing(self):

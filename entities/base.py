@@ -95,10 +95,13 @@ class Entity(ABC):
         self.width = None
         self.color = color
         self.position = position or Position(0, 0)
-        EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
         self.set_size(width, height)
-        self.set_sprite(color)
         self.hitboxes = []
+
+        EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
+        self.set_sprite(color)
+        grid.register_entity(self)
+
 
     def set_size(self, width, height):
         self.width = width
@@ -176,7 +179,10 @@ class MovableEntity(DynamicEntity, ABC):
         self.type = super().type | EntityType.MOVABLE
         self.add_on_game_tick(self.__update_sprite_position, 1000)
 
-    def _move(self, vector: Vector):
+    def move_to(self, position: Position):
+        self.move(self.position.rel_vector(position))
+
+    def move(self, vector: Vector):
         new_main_hitbox = self.main_hitbox.move(vector.x, vector.y)
         interactable_found = False
 
@@ -192,7 +198,7 @@ class MovableEntity(DynamicEntity, ABC):
             if EntityType.INTERACTABLE in target_hb.owner.type:
                 interactable_found = True
 
-        self.position = self.position.add(vector)
+        self.position = self.position + vector
         self.main_hitbox.move_ip(vector.x, vector.y)
         for i in range(len(self.hitboxes)):
             self.hitboxes[i].move_ip(vector.x, vector.y)
