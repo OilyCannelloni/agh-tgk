@@ -1,11 +1,9 @@
 import pygame
 import pygamepal as pp
-
-from entities.blocks import WallSegment, ExampleInteractable
-from entities.player import Player
 from entities.types import TickData
 
-from grid.position import Position
+from levels.level import LevelTestDoor, LevelTeleporter
+
 from ui.hint_renderer import hint_renderer
 from terminal.terminal import Terminal
 from grid.grid import Grid
@@ -16,16 +14,18 @@ clock = pygame.time.Clock()
 
 hint_renderer.initialize(screen)
 
-grid = Grid()
-grid.place_existing_entity(Player(Position(100, 200)))
-grid.place_existing_entity(WallSegment(Position(150, 150), Position(400, 150)))
-grid.place_existing_entity(ExampleInteractable(Position(200, 200)))
-
 pp_input = pp.Input()
 terminal = Terminal(pp_input)
 
-tick_data = TickData(pp_input)
+grid = Grid()
+
+LevelTeleporter.load()
+
+
+tick_data = TickData(0, pp_input)
+
 while True:
+    tick_data.tick += 1
     # Process player inputs.
     pygame_events = pygame.event.get()
     pressed_keys = pygame.key.get_pressed()
@@ -38,7 +38,7 @@ while True:
     # Do logical updates here.
     # ...
     if not terminal.is_enabled():
-        grid.process_player_input(tick_data.pp_input)
+        grid.process_player_input(tick_data)
         grid.process_dynamic_entities(tick_data)
     else:
         grid.process_dynamic_entities(TickData())

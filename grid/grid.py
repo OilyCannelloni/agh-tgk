@@ -27,29 +27,35 @@ class Grid:
             cls._instance = object.__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def place_existing_entity(self, entity: "Entity", position: "Position" = None):
+    def register_entity(self, entity: "Entity"):
         """
         Places a previously created entity on the map
         :param entity: The entity to be placed
         :param position: Position on the map
         """
-        if position is not None:
-            entity.position = position
-        self.sprites.add(entity.sprite)
 
         self.entities.append(entity)
         if EntityType.DYNAMIC in entity.type:
             self.dynamic_entities.append(entity)
 
-    def place_entity(self, entity_name: str, position: "Position" = None, **kwargs):
+    def place_entity_by_name(self, entity_name: str, position: "Position" = None, **kwargs):
         """
         Creates and places an entity on the map
         :param entity_name: Name of the entity as registered in EntityLibrary
         :param position: Position on the map
         :param kwargs: Parameters to be passed to the entity
         """
-        entity = EntityLibrary.create_entity(entity_name, **kwargs)
-        self.place_existing_entity(entity, position)
+        entity = EntityLibrary.create_entity(entity_name, position=position, **kwargs)
+        self.register_entity(entity)
+
+    def clear(self):
+        """
+        Removes all entities
+        """
+        self.sprites = pygame.sprite.Group()
+        self.dynamic_entities = []
+        self.entities = []
+        self.current_interactable_entity = None
 
     def process_dynamic_entities(self, tick_data: TickData):
         """
@@ -69,15 +75,15 @@ class Grid:
                 if hitbox.colliderect(target_hb):
                     yield target_hb
 
-    def process_player_input(self, key_input: pp.Input):
+    def process_player_input(self, tick_data: TickData):
         """
         Responds to player actions other than movement
         """
-        if key_input.isKeyPressed(pygame.K_e):
+        if tick_data.pp_input.isKeyPressed(pygame.K_e):
             if self.current_interactable_entity is not None:
-                self.current_interactable_entity.on_player_interaction()
+                self.current_interactable_entity.on_player_interaction(tick_data)
 
-        if key_input.isKeyPressed(pygame.K_t):
+        if tick_data.pp_input.isKeyPressed(pygame.K_t):
             if EntityType.HACKABLE in self.current_interactable_entity.type:
                 self.current_interactable_entity: HackableEntity
                 self.current_interactable_entity.display_hackable_methods()

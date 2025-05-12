@@ -89,24 +89,37 @@ class Entity(ABC):
     type: EntityType = EntityType.DEFAULT
 
     def __init__(self, *, position=None, width=50, height=50, color="white"):
+        self.sprite: BaseSprite = None
+        self.main_hitbox = None
+        self.height = None
+        self.width = None
+        self.color = color
         self.position = position or Position(0, 0)
-        EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
         self.set_size(width, height)
-        self.set_sprite(color)
         self.hitboxes = []
+
+        EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
+        self.set_sprite(color)
+        grid.register_entity(self)
+
 
     def set_size(self, width, height):
         self.width = width
         self.height = height
         self.main_hitbox = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width,
                                       height=self.height)
+        self.set_sprite(self.color)
 
     def set_sprite(self, color):
+        self.color = color
+        if self.sprite is not None:
+            self.sprite.remove(grid.sprites)
         self.sprite = BaseSprite(
             image=pygame.Surface((self.width, self.height)),
             rect=pygame.Rect(self.position.x, self.position.y, self.width, self.height)
         )
         self.sprite.image.fill(pygame.color.Color(color))
+        self.sprite.add(grid.sprites)
 
     def get_hitbox(self, hitbox_type: type):
         for hitbox in self.hitboxes:
@@ -166,7 +179,10 @@ class MovableEntity(DynamicEntity, ABC):
         self.type = super().type | EntityType.MOVABLE
         self.add_on_game_tick(self.__update_sprite_position, 1000)
 
-    def _move(self, vector: Vector):
+    def move_to(self, position: Position):
+        self.move(self.position.rel_vector(position))
+
+    def move(self, vector: Vector):
         new_main_hitbox = self.main_hitbox.move(vector.x, vector.y)
         interactable_found = False
 
@@ -182,7 +198,7 @@ class MovableEntity(DynamicEntity, ABC):
             if EntityType.INTERACTABLE in target_hb.owner.type:
                 interactable_found = True
 
-        self.position = self.position.add(vector)
+        self.position = self.position + vector
         self.main_hitbox.move_ip(vector.x, vector.y)
         for i in range(len(self.hitboxes)):
             self.hitboxes[i].move_ip(vector.x, vector.y)
@@ -214,7 +230,7 @@ class InteractableEntity(Entity, ABC):
                                  width=self.width + 2 * range_offset, height=self.height + 2 * range_offset))
 
     @abstractmethod
-    def on_player_interaction(self):
+    def on_player_interaction(self, tick_data: TickData):
         """
         This method is called when the player presses E while near this entity.
         :return:
@@ -232,6 +248,12 @@ class HackableEntity(DynamicEntity, ABC):
         self.type |= EntityType.HACKABLE
         self._terminal = Terminal()
         self._hackable_method_names = None
+
+    def __getattribute__(self, name):
+        if HackableMethod.hacker_scope:
+            print("hello", name)
+        return object.__getattribute__(self, name)
+
 
     def get_hackable_method_names(self):
         if self._hackable_method_names is not None:
