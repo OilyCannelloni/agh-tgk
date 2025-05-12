@@ -50,7 +50,7 @@ class WallBuilder(HackableEntity, ABC):
     def __init__(self, position: Position):
         super().__init__(position=position, width=20, height=20, color="pink")
         self.add_on_game_tick(self.build_wall, 50)
-        self.display_hackable_methods()
+        self.display_special_methods()
 
     @HackableMethod
     def build_wall(self, **kwargs):

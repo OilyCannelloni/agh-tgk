@@ -1,3 +1,4 @@
+import dataclasses
 from typing import TYPE_CHECKING
 
 import pygame
@@ -6,6 +7,11 @@ import pygamepal as pp
 
 if TYPE_CHECKING:
     from entities.base import HackableEntity
+
+@dataclasses.dataclass
+class LineTypeInterval:
+    end: int
+    editable: bool
 
 
 class Terminal(TextEditor):
@@ -47,6 +53,9 @@ class Terminal(TextEditor):
             text = "Run code",
             onSelected=self.apply_code
         )
+
+        self.line_types: list[LineTypeInterval] = []
+
         Terminal._initialized = True
 
 
@@ -86,13 +95,31 @@ class Terminal(TextEditor):
             ),
         )
 
-    def set_code(self, ss: str):
-        ss = ss.split("\n")
-        if all([line.startswith("    ") or len(line) == 0 for line in ss]):
-            for i in range(len(ss)):
-                ss[i] = ss[i].removeprefix("    ")
 
-        self.set_text_from_list(ss)
+    def clear(self):
+        self.line_types = []
+        self.editor_lines = []
+
+    def append_code(self, code_str: str, code_type: str):
+        lines = self._format_code(code_str)
+        self.editor_lines.append("")
+        prev_length = len(self.editor_lines)
+        self.editor_lines.extend(lines)
+        self.line_types.append(LineTypeInterval(
+            prev_length + len(lines),
+            code_type == "Hackable"
+        ))
+        print(self.line_types)
+        print(lines)
+
+
+
+    def _format_code(self, code: str):
+        lines = code.split("\n")
+        if all([line.startswith("    ") or len(line) == 0 for line in lines]):
+            for i in range(len(lines)):
+                lines[i] = lines[i].removeprefix("    ")
+        return lines
 
     def update_caret_position(self) -> None:
         """Update the caret position based on current position by line and letter indices.
@@ -106,6 +133,26 @@ class Terminal(TextEditor):
                 (self.chosen_line_index - self.first_showable_line_index)
                 * self.line_height_including_margin
         )
+
+    def render_line_contents(self, line_contents):
+        super().render_line_contents(line_contents)
+
+        start_line = 0
+        for line_type_interval in self.line_types:
+            if not line_type_interval.editable:
+                surf = pygame.Surface((
+                    self.editor_width,
+                    self.line_height_including_margin * (line_type_interval.end - start_line)))
+
+                surf.fill(pygame.Color(150, 0, 0))
+                surf.set_alpha(40)
+                self.screen.blit(surf, (self.line_start_x,
+                                        self.line_start_y + start_line * self.line_height_including_margin))
+
+            start_line = line_type_interval.end + 1
+
+
+
 
     def display_terminal(self, pygame_events, pressed_keys):
         """Display the editor.
@@ -124,7 +171,6 @@ class Terminal(TextEditor):
 
         # RENDERING 1 - Background objects
         self.render_background_coloring()
-        self.render_line_numbers()
         self.button.draw(self.screen)
 
         # RENDERING 2 - Line contents, caret
@@ -143,12 +189,14 @@ class Terminal(TextEditor):
         # RENDERING 3 - scrollbar
         self.render_scrollbar_vertical()
         self.clock.tick(self.FPS)
+        self.render_line_numbers()
+        self.update_line_number_display()
+        self.cycleCounter = self.cycleCounter + 1
 
         if not self.enabled:
             return
 
-        self.cycleCounter = self.cycleCounter + 1
         self.handle_keyboard_input(pygame_events, pressed_keys)
         self.handle_mouse_input(pygame_events, mouse_x, mouse_y, mouse_pressed)
-        self.update_line_number_display()
+
 

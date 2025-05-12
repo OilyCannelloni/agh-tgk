@@ -87,4 +87,4 @@ class Grid:
         if tick_data.pp_input.isKeyPressed(pygame.K_t):
             if EntityType.HACKABLE in self.current_interactable_entity.type:
                 self.current_interactable_entity: HackableEntity
-                self.current_interactable_entity.display_hackable_methods()
+                self.current_interactable_entity.display_special_methods()

@@ -25,7 +25,7 @@ class MethodInfoDict(ABC):
 
 
 class ReadOnlyMethod(MethodInfoDict):
-    meth_info = defaultdict(list)
+    meth_info = defaultdict(dict)
 
     @staticmethod
     def get_meth_info():
@@ -36,7 +36,7 @@ class ReadOnlyMethod(MethodInfoDict):
         Inserts the default body of a hackable method to meth_info dictionary.
         """
         self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
-        ReadOnlyMethod.meth_info[self.class_name].append(self.meth_name)
+        ReadOnlyMethod.meth_info[self.class_name][self.meth_name] = meth
         self._meth = meth
 
     def __call__(self, instance, owner, *args, **kwargs):
@@ -49,10 +49,8 @@ class ReadOnlyMethod(MethodInfoDict):
         return self._meth(instance, *args, **kwargs)
 
 
-
-
 class CallableMethod(MethodInfoDict):
-    meth_info = defaultdict(list)
+    meth_info = defaultdict(dict)
 
     @staticmethod
     def get_meth_info():
@@ -63,8 +61,7 @@ class CallableMethod(MethodInfoDict):
         Inserts the default body of a hackable method to meth_info dictionary.
         """
         self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
-        print(self.class_name, self.meth_name)
-        CallableMethod.meth_info[self.class_name].append(self.meth_name)
+        CallableMethod.meth_info[self.class_name][self.meth_name] = meth
         self._meth = meth
         self.hacker_accessible = True
 

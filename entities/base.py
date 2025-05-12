@@ -9,7 +9,7 @@ from grid.position import *
 from grid.grid import Grid
 from entities.types import EntityType, TickData, HitboxType
 from ui.hint_renderer import hint_renderer
-from hacking.hackable_method import HackableMethod, CallableMethod
+from hacking.hackable_method import HackableMethod, CallableMethod, ReadOnlyMethod
 from terminal.terminal import Terminal
 
 grid = Grid()
@@ -272,19 +272,25 @@ class HackableEntity(DynamicEntity, PlayerInteractionHitboxEntity, ABC):
         self._hackable_method_names = list(CallableMethod.get_all_methods_of_class(self.__class__).keys())
         return self._hackable_method_names
 
-    def display_hackable_methods(self):
+    def display_special_methods(self):
         """
-        Writes the current bodies of all hackable methods of the inheriting class
+        Writes the current bodies of all decorated methods (Hackable, Callable, ReadOnly) of the inheriting class
         onto the terminal
         """
-        code = ""
-        for name, method in HackableMethod.get_all_methods_of_class(self.__class__).items():
-            code += "\n"
+        self._terminal.clear()
+
+        for name, method in ReadOnlyMethod.get_all_methods_of_class(self.__class__).items():
             source = inspect.getsource(method)
-            code += source.strip().removeprefix("@HackableMethod")
+            code = source.strip().removeprefix("@ReadOnlyMethod")
+            self._terminal.append_code(code, "ReadOnly")
+
+        for name, method in HackableMethod.get_all_methods_of_class(self.__class__).items():
+            source = inspect.getsource(method)
+            code = source.strip().removeprefix("@HackableMethod")
+            self._terminal.append_code(code, "Hackable")
 
         self._terminal.set_active_entity(self)
-        self._terminal.set_code(code)
+
 
     def apply_code(self, code: str):
         """
