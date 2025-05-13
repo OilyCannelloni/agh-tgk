@@ -74,7 +74,7 @@ class PlayerInteractHitbox(Hitbox, ABC):
 
     def on_collision_with(self, e: "Entity") -> None:
         if EntityType.PLAYER in e.type:
-            hint_renderer.show_hint()
+            hint_renderer.show_hint(self.owner.type)
             grid.current_interactable_entity = self.owner
 
     def is_passable_for(self, e: "Entity") -> bool:

@@ -104,7 +104,6 @@ class HackableMethod(MethodInfoDict):
         Inserts the default body of a hackable method to meth_info dictionary.
         """
         self.class_name, self.meth_name = meth.__qualname__.rsplit('.', 1)
-        print(self.class_name, self.meth_name)
         HackableMethod.meth_info[self.class_name][self.meth_name] = meth
         self._default_meth = meth
         self.hacker_accessible = True
@@ -142,7 +141,6 @@ class HackableMethod(MethodInfoDict):
         # I say let it come as it will, in ice, fire, or darkness.
         # What did the universe ever do for me that I should mind its welfare?”
         HackableMethod.hacker_scope = True
-        print(code)
         exec(code, None, scope)
         HackableMethod.hacker_scope = False
 

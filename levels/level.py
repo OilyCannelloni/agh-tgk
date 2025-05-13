@@ -40,6 +40,5 @@ class LevelTeleporter(Level):
         tt = TeleporterTarget(Position(200, 400))
 
         tel = HackableTeleporter(Position(200, 200))
-        print(tel.type)
         tel.set_target(tt)
 

@@ -47,16 +47,18 @@ class GameHintRenderer:
 
         return combined_surface
 
-    def show_hint(self):
+    def show_hint(self, owner_type: EntityType):
         if not self._screen:
             raise RuntimeError("GameHintRenderer not initialized. Call initialize(screen) first.")
 
         if self._hint_surface is not None and self._hint_rect is not None:
             return
 
-        hint_surfaces = [self._create_hint_surface(key, text) for req_e_type, key, text in self._interaction_hints]
-
-        print(hint_surfaces)
+        hint_surfaces = []
+        for req_e_type, key, text in self._interaction_hints:
+            print(req_e_type)
+            if req_e_type in owner_type:
+                hint_surfaces.append(self._create_hint_surface(key, text))
 
         total_width = sum(surface.get_width() for surface in hint_surfaces) + 10 * (len(hint_surfaces) - 1)
         max_height = max(surface.get_height() for surface in hint_surfaces)
