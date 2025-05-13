@@ -4,13 +4,14 @@ import pygame
 
 from entities.base import Entity, DynamicEntity, MovableEntity, HackableEntity
 from entities.types import EntityType
+from grid.grid import Grid
 from grid.position import Position
 from hacking.hackable_method import HackableMethod, CallableMethod, ReadOnlyMethod
 
 
 class TeleporterTarget(Entity):
     def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, width=30, height=30, color=pygame.Color(200, 200, 0, 100), **kwargs)
+        super().__init__(position=position, width=15, height=15, color=pygame.Color(200, 200, 0, 100), **kwargs)
 
     def is_passable_for(self, entity: "Entity"):
         return True
@@ -31,18 +32,22 @@ class Teleporter(Entity):
 
 
 class HackableTeleporter(Teleporter, HackableEntity):
-    def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, interaction_offset=15)
-    
+    def __init__(self, position: Position, targets: list[TeleporterTarget], teleporters: list[Teleporter], **kwargs):
+        super().__init__(position=position, interaction_offset=15, **kwargs)
+        self.targets = targets
+        self.other_teleporters = teleporters
+
     @CallableMethod
-    def set_target(self, target: TeleporterTarget):
+    def set_target(self, target):
         self.target = target
 
-    @HackableMethod
-    def dopa(self):
-        pass
+    @CallableMethod
+    def get_valid_targets(self):
+        return self.targets
 
-    @ReadOnlyMethod
-    def syff(self):
-        pass
+    @CallableMethod
+    def get_other_teleporters(self):
+        return self.other_teleporters
+
+
 

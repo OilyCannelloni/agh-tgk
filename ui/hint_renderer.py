@@ -56,7 +56,6 @@ class GameHintRenderer:
 
         hint_surfaces = []
         for req_e_type, key, text in self._interaction_hints:
-            print(req_e_type)
             if req_e_type in owner_type:
                 hint_surfaces.append(self._create_hint_surface(key, text))
 

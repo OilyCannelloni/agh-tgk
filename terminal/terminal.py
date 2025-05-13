@@ -24,14 +24,14 @@ class Terminal(TextEditor):
     BORDER_WIDTH = 5
 
     _instance = None
-    _initialized = False
+    initialized = False
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
             cls._instance = object.__new__(cls)
         return cls._instance
 
     def __init__(self, input: pp.Input = None):
-        if Terminal._initialized:
+        if Terminal.initialized:
             return
         super().__init__(offset_x=Terminal.OFFSET_X, offset_y=Terminal.OFFSET_Y,
                          editor_width=Terminal.WIDTH, editor_height=Terminal.HEIGHT,
@@ -58,7 +58,7 @@ class Terminal(TextEditor):
 
         self.num_read_only_lines = 0
 
-        Terminal._initialized = True
+        Terminal.initialized = True
 
 
     def on_tick(self):
@@ -97,10 +97,10 @@ class Terminal(TextEditor):
             ),
         )
 
-
     def clear(self):
         self.num_read_only_lines = 0
         self.editor_lines = []
+        self.active_entity = None
 
     def set_read_only_code(self, code_str: str):
         lines = self._format_code(code_str)

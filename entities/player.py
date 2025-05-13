@@ -2,6 +2,7 @@ from abc import ABC
 import pygame
 
 from grid.position import *
+from levels.base import Level
 from .base import BaseSprite, MovableEntity
 from entities.types import EntityType
 import pygamepal as pp
@@ -38,4 +39,7 @@ class Player(MovableEntity, ABC):
     def __move(self, **data):
         super().move(self.current_movement_vector)
 
+    def killed_by(self, killer: str):
+        print(f"You have been killed by {killer}")
+        Level.load_last()
 

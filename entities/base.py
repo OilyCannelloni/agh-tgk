@@ -135,6 +135,9 @@ class Entity(ABC):
     def on_collision_with(self, entity: "Entity"):
         pass
 
+    def killed_by(self, killer: str):
+        pass
+
 
 @dataclass
 class GameTickAction:
@@ -266,11 +269,6 @@ class HackableEntity(DynamicEntity, PlayerInteractionHitboxEntity, ABC):
         self._hackable_method_names = list(HackableMethod.get_all_methods_of_class(self.__class__).keys())
         return self._hackable_method_names
 
-    def get_callable_method_names(self):
-        if self._hackable_method_names is not None:
-            return self._hackable_method_names
-        self._hackable_method_names = list(CallableMethod.get_all_methods_of_class(self.__class__).keys())
-        return self._hackable_method_names
 
     def display_special_methods(self):
         """
@@ -280,15 +278,15 @@ class HackableEntity(DynamicEntity, PlayerInteractionHitboxEntity, ABC):
         self._terminal.clear()
 
         code = ""
-        for name, method in ReadOnlyMethod.get_all_methods_of_class(self.__class__).items():
+        for name, method in CallableMethod.get_all_methods_of_class(self.__class__).items():
             source = inspect.getsource(method)
-            code += source.strip().removeprefix("@ReadOnlyMethod")
+            code += source.strip().removeprefix("@CallableMethod") + "\n"
         self._terminal.set_read_only_code(code)
 
         code = ""
         for name, method in HackableMethod.get_all_methods_of_class(self.__class__).items():
             source = inspect.getsource(method)
-            code = source.strip().removeprefix("@HackableMethod")
+            code += source.strip().removeprefix("@HackableMethod") + "\n"
         self._terminal.set_hackable_code(code)
 
         self._terminal.set_active_entity(self)
