@@ -279,15 +279,17 @@ class HackableEntity(DynamicEntity, PlayerInteractionHitboxEntity, ABC):
         """
         self._terminal.clear()
 
+        code = ""
         for name, method in ReadOnlyMethod.get_all_methods_of_class(self.__class__).items():
             source = inspect.getsource(method)
-            code = source.strip().removeprefix("@ReadOnlyMethod")
-            self._terminal.append_code(code, "ReadOnly")
+            code += source.strip().removeprefix("@ReadOnlyMethod")
+        self._terminal.set_read_only_code(code)
 
+        code = ""
         for name, method in HackableMethod.get_all_methods_of_class(self.__class__).items():
             source = inspect.getsource(method)
             code = source.strip().removeprefix("@HackableMethod")
-            self._terminal.append_code(code, "Hackable")
+        self._terminal.set_hackable_code(code)
 
         self._terminal.set_active_entity(self)
 
