@@ -45,14 +45,21 @@ class Terminal(TextEditor):
         self.enabled = False
         self.active_entity: HackableEntity = None
         self.rect = pygame.rect.Rect(Terminal.OFFSET_X - Terminal.BORDER_WIDTH,
-                                     Terminal.OFFSET_Y - Terminal.BORDER_WIDTH, Terminal.WIDTH, Terminal.HEIGHT)
+                                     Terminal.OFFSET_Y - Terminal.BORDER_WIDTH,
+                                     Terminal.WIDTH + 2 * Terminal.BORDER_WIDTH,
+                                     Terminal.HEIGHT + 2 * Terminal.BORDER_WIDTH)
         self.line_start_y += 5
         self.initialize()
         self.input: pp.Input = input
+
+        button_width = 100
+        button_height = 50
         self.button = pp.Button(
             input=self.input,
-            position=(Terminal.OFFSET_X + Terminal.WIDTH // 2, Terminal.OFFSET_Y + Terminal.HEIGHT + 20),
-            text = "Run code",
+            position=(Terminal.OFFSET_X + (Terminal.WIDTH + Terminal.BORDER_WIDTH - button_width) // 2,
+                      Terminal.OFFSET_Y + Terminal.HEIGHT + Terminal.BORDER_WIDTH + 20),
+            size=(button_width, button_height),
+            text="Run code",
             onSelected=self.apply_code
         )
 
