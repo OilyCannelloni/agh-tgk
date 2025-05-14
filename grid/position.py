@@ -1,10 +1,13 @@
 from dataclasses import dataclass
 
 @dataclass
-class Vector:
+class I2D:
     x: float
     y: float
 
+
+@dataclass
+class Vector(I2D):
     def scale(self, factor):
         return Vector(self.x * factor, self.y * factor)
 
@@ -13,12 +16,12 @@ class Vector:
 
 
 @dataclass
-class Position:
-    x: float
-    y: float
-
-    def add(self, vector: Vector):
+class Position(I2D):
+    def __add__(self, vector: Vector):
         return Position(self.x + vector.x, self.y + vector.y)
+
+    def rel_vector(self, other_pos: "Position"):
+        return Position(other_pos.x - self.x, other_pos.y - self.y)
 
     def __repr__(self):
         return f"({self.x}, {self.y})"

@@ -8,7 +8,7 @@ from grid.position import Position
 
 class Exit(Entity):
     def __init__(self, position: Position, on_exit: Callable):
-        super().__init__(position=position, width=30, height=50, color="cyan")
+        super().__init__(position=position, width=20, height=40, color="cyan")
         self.on_exit = on_exit
         # TODO make this image work
         # self.sprite.image = pygame.image.load("resources/exit.png")

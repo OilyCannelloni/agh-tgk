@@ -57,7 +57,6 @@ class DoorButton(InteractableEntity, HackableEntity):
 
     def on_tick(self, tick_data: TickData):
         if tick_data.tick == self.release_tick:
-            print("dadw")
             self.unclick()
 
 

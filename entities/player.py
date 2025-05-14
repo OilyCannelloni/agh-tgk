@@ -42,6 +42,9 @@ class Player(MovableEntity, ABC):
         self.current_movement_vector = vector.scale(self.speed)
 
     def __move(self, **data):
-        super()._move(self.current_movement_vector)
+        super().move(self.current_movement_vector)
 
+    def killed_by(self, killer: str):
+        print(f"You have been killed by {killer}")
+        Level.load_last()
 
