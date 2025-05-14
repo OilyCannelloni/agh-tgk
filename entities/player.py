@@ -3,6 +3,7 @@ import pygame
 
 from grid.position import *
 from utils import tint_image
+from levels.base import Level
 from .base import MovableEntity
 from entities.types import EntityType
 import pygamepal as pp
