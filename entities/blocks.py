@@ -13,61 +13,44 @@ class WallSegment(Entity, ABC):
     THICKNESS = 10
 
     def __init__(self, start: Position, end: Position, color="white"):
+        half = WallSegment.THICKNESS // 2
         if start.x == end.x:
-            height = abs(start.y - end.y)
+            height = abs(start.y - end.y) + WallSegment.THICKNESS
             width = WallSegment.THICKNESS
-            position = Position(start.x, min(start.y, end.y))
+            position = Position(start.x - half, min(start.y, end.y) - half)
         elif start.y == end.y:
             height = WallSegment.THICKNESS
-            width = abs(start.x - end.x)
-            position = Position(min(start.x, end.x), start.y)
+            width = abs(start.x - end.x) + WallSegment.THICKNESS
+            position = Position(min(start.x, end.x) - half, start.y - half)
         else:
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
         super().__init__(position=position, width=width, height=height, color=color)
 
 
-class ExampleInteractable(InteractableEntity, HackableEntity):
-    def __init__(self, position: Position):
-        self.color_cycle = itertools.cycle(("red", "green", "blue"))
-        super().__init__(position=position, width=50, height=50, color=pygame.Color(next(self.color_cycle)))
+class Button(InteractableEntity, ABC):
+    def __init__(self, position: Position, **kwargs):
+        super().__init__(position=position, width=30, height=30, color="orange", **kwargs)
+        self.target = None
+        self.release_tick = -1
 
-    def set_color(self, color):
-        self.sprite.image.fill(pygame.Color(color))
+    def set_target(self, entity: Entity):
+        self.target = entity
 
-    @CallableMethod
-    def set_color_cycle(self, colors: tuple[str]):
-        self.color_cycle = itertools.cycle(colors)
+    def click(self):
+        if self.target is not None:
+            try:
+                self.target.trigger()
+            except AttributeError:
+                print(f"Can't trigger target: {self.target}")
 
-    @HackableMethod
-    def on_player_interaction(self, tick_data: TickData):
-        # next(self.color_cycle) # try uncommenting me!
-        color = next(self.color_cycle)
-        self.set_color(color)
+    def on_player_interaction(self, tick_data):
+        self.click()
 
 
-class WallBuilder(HackableEntity, ABC):
-    def __init__(self, position: Position):
-        super().__init__(position=position, width=20, height=20, color="pink")
-        self.add_on_game_tick(self.build_wall, 50)
-        self.display_hackable_methods()
+class Trap(Entity, ABC):
+    def __init__(self, position: Position, **kwargs):
+        super().__init__(position=position, width=20, height=20, color="red", **kwargs)
 
-    @HackableMethod
-    def build_wall(self, **kwargs):
-        if random() > 0.02:
-            return
-
-        start = Position(randint(300, 700), randint(300, 700))
-        if random() < 0.5:
-            end = Position(start.x, randint(300, 700))
-        else:
-            end = Position(randint(300, 700), start.y)
-
-        grid.place_entity_by_name("WallSegment", start, end)
-
-    @HackableMethod
-    def nothing(self):
-        print("adwsdads")
-
-    def stuff(self):
-        print("stuff")
+    def on_collision_with(self, entity: "Entity"):
+        entity.killed_by("Trap")

@@ -9,7 +9,7 @@ from grid.position import *
 from grid.grid import Grid
 from entities.types import EntityType, TickData, HitboxType
 from ui.hint_renderer import hint_renderer
-from hacking.hackable_method import HackableMethod
+from hacking.hackable_method import HackableMethod, CallableMethod, ReadOnlyMethod
 from terminal.terminal import Terminal
 
 grid = Grid()
@@ -69,12 +69,12 @@ class MainHitbox(Hitbox, ABC):
 class PlayerInteractHitbox(Hitbox, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        assert isinstance(self.owner, InteractableEntity)
+        assert isinstance(self.owner, InteractableEntity) or isinstance(self.owner, HackableEntity)
         self.type = HitboxType.OTHER
 
     def on_collision_with(self, e: "Entity") -> None:
         if EntityType.PLAYER in e.type:
-            hint_renderer.show_hint()
+            hint_renderer.show_hint(self.owner.type)
             grid.current_interactable_entity = self.owner
 
     def is_passable_for(self, e: "Entity") -> bool:
@@ -88,7 +88,7 @@ class Entity(ABC):
     """
     type: EntityType = EntityType.DEFAULT
 
-    def __init__(self, *, position=None, width=50, height=50, color="white"):
+    def __init__(self, *, position=None, width=50, height=50, color="white", **kwargs):
         self.sprite: BaseSprite = None
         self.main_hitbox = None
         self.height = None
@@ -133,6 +133,9 @@ class Entity(ABC):
         return False
 
     def on_collision_with(self, entity: "Entity"):
+        pass
+
+    def killed_by(self, killer: str):
         pass
 
 
@@ -195,7 +198,7 @@ class MovableEntity(DynamicEntity, ABC):
                 if not target_hb.owner.is_passable_for(self):
                     return
 
-            if EntityType.INTERACTABLE in target_hb.owner.type:
+            if EntityType.INTERACTABLE in target_hb.owner.type or EntityType.HACKABLE in target_hb.owner.type:
                 interactable_found = True
 
         self.position = self.position + vector
@@ -212,14 +215,13 @@ class MovableEntity(DynamicEntity, ABC):
         self.sprite.update_position(self.position)
 
 
-class InteractableEntity(Entity, ABC):
-    def __init__(self, interaction_offset=5, **kwargs):
+class PlayerInteractionHitboxEntity(Entity, ABC):
+    def __init__(self, *, interaction_offset=5, **kwargs):
         super().__init__(**kwargs)
         if self.hitboxes is None:
             self.hitboxes = []
 
         self.set_player_interaction_range(interaction_offset)
-        self.type |= EntityType.INTERACTABLE
 
     def set_player_interaction_range(self, range_offset):
         """
@@ -228,6 +230,12 @@ class InteractableEntity(Entity, ABC):
         self.hitboxes.append(
             PlayerInteractHitbox(owner=self, x=self.position.x - range_offset, y=self.position.y - range_offset,
                                  width=self.width + 2 * range_offset, height=self.height + 2 * range_offset))
+
+
+class InteractableEntity(PlayerInteractionHitboxEntity, ABC):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.type |= EntityType.INTERACTABLE
 
     @abstractmethod
     def on_player_interaction(self, tick_data: TickData):
@@ -238,7 +246,7 @@ class InteractableEntity(Entity, ABC):
         pass
 
 
-class HackableEntity(DynamicEntity, ABC):
+class HackableEntity(DynamicEntity, PlayerInteractionHitboxEntity, ABC):
     """
     Describes an entity type the behavior of which can be altered by the user.
     """
@@ -258,22 +266,31 @@ class HackableEntity(DynamicEntity, ABC):
     def get_hackable_method_names(self):
         if self._hackable_method_names is not None:
             return self._hackable_method_names
-        self._hackable_method_names = list(HackableMethod.get_all_hackable_methods(self.__class__).keys())
+        self._hackable_method_names = list(HackableMethod.get_all_methods_of_class(self.__class__).keys())
         return self._hackable_method_names
 
-    def display_hackable_methods(self):
+
+    def display_special_methods(self):
         """
-        Writes the current bodies of all hackable methods of the inheriting class
+        Writes the current bodies of all decorated methods (Hackable, Callable, ReadOnly) of the inheriting class
         onto the terminal
         """
+        self._terminal.clear()
+
         code = ""
-        for name, method in HackableMethod.get_all_hackable_methods(self.__class__).items():
-            code += "\n"
+        for name, method in CallableMethod.get_all_methods_of_class(self.__class__).items():
             source = inspect.getsource(method)
-            code += source.strip().removeprefix("@HackableMethod")
+            code += source.strip().removeprefix("@CallableMethod") + "\n"
+        self._terminal.set_read_only_code(code)
+
+        code = ""
+        for name, method in HackableMethod.get_all_methods_of_class(self.__class__).items():
+            source = inspect.getsource(method)
+            code += source.strip().removeprefix("@HackableMethod") + "\n"
+        self._terminal.set_hackable_code(code)
 
         self._terminal.set_active_entity(self)
-        self._terminal.set_code(code)
+
 
     def apply_code(self, code: str):
         """

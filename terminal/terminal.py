@@ -1,11 +1,19 @@
+import dataclasses
 from typing import TYPE_CHECKING
 
 import pygame
+from pygame.key import ScancodeWrapper
 from pygame_texteditor import TextEditor
 import pygamepal as pp
 
 if TYPE_CHECKING:
     from entities.base import HackableEntity
+
+@dataclasses.dataclass
+class LineTypeInterval:
+    start: int
+    end: int
+    editable: bool
 
 
 class Terminal(TextEditor):
@@ -16,14 +24,14 @@ class Terminal(TextEditor):
     BORDER_WIDTH = 5
 
     _instance = None
-    _initialized = False
+    initialized = False
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
             cls._instance = object.__new__(cls)
         return cls._instance
 
     def __init__(self, input: pp.Input = None):
-        if Terminal._initialized:
+        if Terminal.initialized:
             return
         super().__init__(offset_x=Terminal.OFFSET_X, offset_y=Terminal.OFFSET_Y,
                          editor_width=Terminal.WIDTH, editor_height=Terminal.HEIGHT,
@@ -47,7 +55,10 @@ class Terminal(TextEditor):
             text = "Run code",
             onSelected=self.apply_code
         )
-        Terminal._initialized = True
+
+        self.num_read_only_lines = 0
+
+        Terminal.initialized = True
 
 
     def on_tick(self):
@@ -86,17 +97,30 @@ class Terminal(TextEditor):
             ),
         )
 
-    def set_code(self, ss: str):
-        ss = ss.split("\n")
-        if all([line.startswith("    ") or len(line) == 0 for line in ss]):
-            for i in range(len(ss)):
-                ss[i] = ss[i].removeprefix("    ")
+    def clear(self):
+        self.num_read_only_lines = 0
+        self.editor_lines = []
+        self.active_entity = None
 
-        self.set_text_from_list(ss)
+    def set_read_only_code(self, code_str: str):
+        lines = self._format_code(code_str)
+        self.editor_lines = lines
+        self.num_read_only_lines = len(lines)
+
+    def set_hackable_code(self, code_str: str):
+        lines = self._format_code(code_str)
+        self.editor_lines.append("")
+        self.editor_lines.extend(lines)
+
+    def _format_code(self, code: str):
+        lines = code.split("\n")
+        if all([line.startswith("    ") or len(line) == 0 for line in lines]):
+            for i in range(len(lines)):
+                lines[i] = lines[i].removeprefix("    ")
+        return lines
 
     def update_caret_position(self) -> None:
         """Update the caret position based on current position by line and letter indices.
-
         We add one pixel to the x coordinate so the caret is fully visible if it is at the start of the line.
         """
         self.caret_x = (
@@ -107,11 +131,23 @@ class Terminal(TextEditor):
                 * self.line_height_including_margin
         )
 
-    def display_terminal(self, pygame_events, pressed_keys):
+    def render_line_contents(self, line_contents):
+        super().render_line_contents(line_contents)
+
+        if self.num_read_only_lines <= 0:
+            return
+
+        surf = pygame.Surface((
+            self.editor_width,
+            self.line_height_including_margin * self.num_read_only_lines))
+
+        surf.fill(pygame.Color(150, 0, 0))
+        surf.set_alpha(40)
+        self.screen.blit(surf, (self.line_start_x, self.line_start_y))
+
+    def display_terminal(self, pygame_events, pressed_keys: ScancodeWrapper):
         """Display the editor.
         The function should be called once within every pygame loop.
-        :param pygame_events:
-        :param pressed_keys:
         """
         self.input.update()
         self.button.update()
@@ -124,7 +160,6 @@ class Terminal(TextEditor):
 
         # RENDERING 1 - Background objects
         self.render_background_coloring()
-        self.render_line_numbers()
         self.button.draw(self.screen)
 
         # RENDERING 2 - Line contents, caret
@@ -143,12 +178,26 @@ class Terminal(TextEditor):
         # RENDERING 3 - scrollbar
         self.render_scrollbar_vertical()
         self.clock.tick(self.FPS)
+        self.render_line_numbers()
+        self.update_line_number_display()
+        self.cycleCounter = self.cycleCounter + 1
 
         if not self.enabled:
             return
 
-        self.cycleCounter = self.cycleCounter + 1
-        self.handle_keyboard_input(pygame_events, pressed_keys)
         self.handle_mouse_input(pygame_events, mouse_x, mouse_y, mouse_pressed)
-        self.update_line_number_display()
+
+        # what a dirty hack byt hey - it works at least
+        if not pressed_keys[pygame.K_LCTRL] and not pressed_keys[pygame.K_RCTRL]:
+            if self.caret_y < self.num_read_only_lines * self.line_height_including_margin + self.line_start_y:
+                i = 0
+                while i < len(pygame_events):
+                    if pygame_events[i].type == pygame.KEYDOWN and len(pygame.key.name(pygame_events[i].key)) == 1:
+                        pygame_events.pop(i)
+                    else:
+                        i += 1
+
+        self.handle_keyboard_input(pygame_events, pressed_keys)
+
+
 
