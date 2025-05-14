@@ -17,6 +17,7 @@ class Terminal(TextEditor):
 
     _instance = None
     _initialized = False
+
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
             cls._instance = object.__new__(cls)
@@ -37,18 +38,24 @@ class Terminal(TextEditor):
         self.enabled = False
         self.active_entity: HackableEntity = None
         self.rect = pygame.rect.Rect(Terminal.OFFSET_X - Terminal.BORDER_WIDTH,
-                                     Terminal.OFFSET_Y - Terminal.BORDER_WIDTH, Terminal.WIDTH, Terminal.HEIGHT)
+                                     Terminal.OFFSET_Y - Terminal.BORDER_WIDTH,
+                                     Terminal.WIDTH + 2 * Terminal.BORDER_WIDTH,
+                                     Terminal.HEIGHT + 2 * Terminal.BORDER_WIDTH)
         self.line_start_y += 5
         self.initialize()
         self.input: pp.Input = input
+
+        button_width = 100
+        button_height = 50
         self.button = pp.Button(
             input=self.input,
-            position=(Terminal.OFFSET_X + Terminal.WIDTH // 2, Terminal.OFFSET_Y + Terminal.HEIGHT + 20),
-            text = "Run code",
+            position=(Terminal.OFFSET_X + (Terminal.WIDTH + Terminal.BORDER_WIDTH - button_width) // 2,
+                      Terminal.OFFSET_Y + Terminal.HEIGHT + Terminal.BORDER_WIDTH + 20),
+            size=(button_width, button_height),
+            text="Run code",
             onSelected=self.apply_code
         )
         Terminal._initialized = True
-
 
     def on_tick(self):
         self.create_visual_effects()
@@ -72,7 +79,6 @@ class Terminal(TextEditor):
 
     def is_enabled(self):
         return self.enabled
-
 
     def initialize(self):
         pygame.draw.rect(
@@ -151,4 +157,3 @@ class Terminal(TextEditor):
         self.handle_keyboard_input(pygame_events, pressed_keys)
         self.handle_mouse_input(pygame_events, mouse_x, mouse_y, mouse_pressed)
         self.update_line_number_display()
-
