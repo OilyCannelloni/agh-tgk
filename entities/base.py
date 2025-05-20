@@ -109,7 +109,6 @@ class Entity(ABC):
         self.height = height
         self.main_hitbox = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width,
                                       height=self.height)
-        self.set_sprite(self.color)
 
     def set_sprite(self, color, image=None):
         self.color = color
