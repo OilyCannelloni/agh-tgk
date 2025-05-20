@@ -7,11 +7,26 @@ from entities.types import EntityType
 from grid.grid import Grid
 from grid.position import Position
 from hacking.hackable_method import HackableMethod, CallableMethod, ReadOnlyMethod
+from utils import tint_image
+
+TELEPORTER_IMAGE_PATH = "resources/teleport.png"
 
 
 class TeleporterTarget(Entity):
     def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, width=15, height=15, color=pygame.Color(200, 200, 0, 100), **kwargs)
+        width = height = 15
+        image = self._load_icon(width, height)
+        super().__init__(position=position, width=width, height=height, color=pygame.Color(200, 200, 0, 100), custom_image=image, **kwargs)
+
+    @staticmethod
+    def _load_icon(width, height):
+        try:
+            image = pygame.image.load(TELEPORTER_IMAGE_PATH).convert_alpha()
+        except pygame.error as e:
+            raise RuntimeError(f"Failed to load teleporter image: {e}")
+        image = pygame.transform.scale(image, (width, height))
+        image = tint_image(image, (200, 200, 0))
+        return image
 
     def is_passable_for(self, entity: "Entity"):
         return True
@@ -19,8 +34,21 @@ class TeleporterTarget(Entity):
 
 class Teleporter(Entity):
     def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, width=30, height=30, color=pygame.Color("magenta"), **kwargs)
+        width = height = 30
+        image = self._load_icon(width, height)
+        super().__init__(position=position, width=width, height=height, color=pygame.Color("magenta"),
+                         custom_image=image, **kwargs)
         self.target: TeleporterTarget = None
+
+    @staticmethod
+    def _load_icon(width, height):
+        try:
+            image = pygame.image.load(TELEPORTER_IMAGE_PATH).convert_alpha()
+        except pygame.error as e:
+            raise RuntimeError(f"Failed to load teleporter image: {e}")
+        image = pygame.transform.scale(image, (width, height))
+        image = tint_image(image, "magenta")
+        return image
 
     def set_target(self, target: TeleporterTarget):
         self.target = target
@@ -48,6 +76,3 @@ class HackableTeleporter(Teleporter, HackableEntity):
     @CallableMethod
     def get_other_teleporters(self):
         return self.other_teleporters
-
-
-
