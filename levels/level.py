@@ -34,7 +34,7 @@ tps = self.get_other_teleporters()
 min_y = 999
 for tp in tps:
     if tp.target.position.y < min_y:
-        min_y = tp.position.y
+        min_y = tp.target.position.y
         exit_tp = tp
 
 ey = exit_tp.position.y
@@ -58,14 +58,14 @@ self.set_target(exit_target)
     def make_trap_cell(position):
         Level.make_wall_cell("nesw", 100, position)
         tt = TeleporterTarget(position + Vector(-40, -40))
-        Trap(position + Vector(20, 20))
+        Trap(position + Vector(10, 10))
         return tt
 
     @staticmethod
     def make_exit_cell(position):
         Level.make_wall_cell("nesw", 100, position)
         tt = TeleporterTarget(position + Vector(-40, -40))
-        Exit(position + Vector(20, 0), LevelTestDoor.load)
+        Exit(position + Vector(10, 0), LevelTestDoor.load)
         return tt
 
     @classmethod

@@ -88,19 +88,20 @@ class Entity(ABC):
     """
     type: EntityType = EntityType.DEFAULT
 
-    def __init__(self, *, position=None, width=50, height=50, color="white", **kwargs):
+    def __init__(self, *, position=None, width=50, height=50, color="white", custom_image=None, **kwargs):
         self.sprite: BaseSprite = None
         self.main_hitbox = None
         self.height = None
         self.width = None
         self.color = color
+        self.custom_image = custom_image
         self.position = position or Position(0, 0)
         self.set_size(width, height)
         self.hitboxes = []
         self.properties = {}
 
         EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
-        self.set_sprite(color)
+        self.set_sprite(color, custom_image)
         grid.register_entity(self)
 
 
@@ -109,17 +110,21 @@ class Entity(ABC):
         self.height = height
         self.main_hitbox = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width,
                                       height=self.height)
-        self.set_sprite(self.color)
 
-    def set_sprite(self, color):
+    def set_sprite(self, color, image=None):
         self.color = color
         if self.sprite is not None:
             self.sprite.remove(grid.sprites)
+
+        if image:
+            self.custom_image = image
+        else:
+            image = pygame.Surface((self.width, self.height))
+            image.fill(pygame.color.Color(color))
         self.sprite = BaseSprite(
-            image=pygame.Surface((self.width, self.height)),
+            image=image,
             rect=pygame.Rect(self.position.x, self.position.y, self.width, self.height)
         )
-        self.sprite.image.fill(pygame.color.Color(color))
         self.sprite.add(grid.sprites)
 
     def get_hitbox(self, hitbox_type: type):
