@@ -103,7 +103,7 @@ class LevelLasers(Level, ABC):
     def load(cls):
         super().load()
         p = Player(Position(100, 100))
-        LaserEmitter(Position(200, 150))
+        LaserEmitter(Position(200, 150), delay=25)
 
         w = WallSegment(Position(0, 550), Position(300, 550))
         d = DestroyButton(Position(100, 150))
