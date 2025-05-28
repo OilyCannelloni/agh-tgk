@@ -5,6 +5,7 @@ from entities.base import *
 from grid.position import Position
 from grid.grid import Grid
 from hacking.hackable_method import CallableMethod
+from utils import tint_image
 
 grid = Grid()
 
@@ -50,7 +51,19 @@ class Button(InteractableEntity, ABC):
 
 class Trap(Entity, ABC):
     def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, width=20, height=20, color="red", **kwargs)
+        width = height = 30
+        image = self._load_icon(width, height)
+        super().__init__(position=position, width=width, height=height, color="red", custom_image=image, **kwargs)
+
+    @staticmethod
+    def _load_icon(width, height):
+        try:
+            image = pygame.image.load("resources/spider-web.png").convert_alpha()
+        except pygame.error as e:
+            raise RuntimeError(f"Failed to load teleporter image: {e}")
+        image = pygame.transform.scale(image, (width, height))
+        image = tint_image(image, "red")
+        return image
 
     def on_collision_with(self, entity: "Entity"):
         entity.killed_by("Trap")
