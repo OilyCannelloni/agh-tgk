@@ -88,3 +88,10 @@ class Grid:
             if EntityType.HACKABLE in self.current_interactable_entity.type:
                 self.current_interactable_entity: HackableEntity
                 self.current_interactable_entity.display_special_methods()
+
+    def remove_entity(self, entity):
+        self.sprites.remove(entity.sprite)
+        self.entities.remove(entity)
+        if EntityType.DYNAMIC in entity.type:
+            self.dynamic_entities.remove(entity)
+

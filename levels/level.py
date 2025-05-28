@@ -1,7 +1,10 @@
 import random
+from abc import ABC
+
 from entities.blocks import WallSegment, Trap
 from entities.common import Exit
-from entities.doors import OpenableDoor, DoorButton
+from entities.doors import OpenableDoor, HackableDoorButton, DestroyButton
+from entities.laser import LaserEmitter, Zombie
 from entities.player import Player
 from entities.teleporter import TeleporterTarget, Teleporter, HackableTeleporter
 from grid.position import Position, Vector
@@ -17,7 +20,7 @@ class LevelTestDoor(Level):
         WallSegment(Position(200, 150), Position(200, 500))
         WallSegment(Position(10, 500), Position(200, 500))
         door = OpenableDoor(Position(200, 100))
-        button = DoorButton(Position(100, 400))
+        button = HackableDoorButton(Position(100, 400))
         button.set_target_door(door)
         Player(Position(100, 100))
         Exit(Position(300, 200), LevelTeleporter.load)
@@ -94,3 +97,21 @@ self.set_target(exit_target)
         tel = HackableTeleporter(Position(200, 200), all_tts, other_teleporters)
         tel.set_target(random.choice(trap_mid_tts))
 
+
+class LevelLasers(Level, ABC):
+    @classmethod
+    def load(cls):
+        super().load()
+        p = Player(Position(100, 100))
+        LaserEmitter(Position(200, 150))
+
+        w = WallSegment(Position(0, 550), Position(300, 550))
+        d = DestroyButton(Position(100, 150))
+        d.set_target(w)
+
+
+        for i in range(200, 300, 15):
+            z = Zombie(Position(i, 600))
+            z.set_target(p)
+
+        Exit(Position(50, 570), LevelLasers.load)

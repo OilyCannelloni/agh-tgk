@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 @dataclass
@@ -13,6 +14,14 @@ class Vector(I2D):
 
     def add(self, vector: "Vector"):
         return Vector(self.x + vector.x, self.y + vector.y)
+
+    @staticmethod
+    def from_angle(angle: float):
+        return Vector(math.cos(angle), -math.sin(angle))
+
+    def normalize(self):
+        l = math.sqrt(self.x ** 2 + self.y ** 2)
+        return Vector(self.x / l, self.y / l)
 
 
 @dataclass
