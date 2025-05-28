@@ -7,7 +7,7 @@ import pygame
 from entities.entity_library import EntityLibrary
 from grid.position import *
 from grid.grid import Grid
-from entities.types import EntityType, TickData, HitboxType
+from entities.types import EntityType, TickData, HitboxType, FRect
 from ui.hint_renderer import hint_renderer
 from hacking.hackable_method import HackableMethod, CallableMethod, ReadOnlyMethod
 from terminal.terminal import Terminal
@@ -30,7 +30,7 @@ class BaseSprite(pygame.sprite.Sprite):
         self.rect.y = pos.y
 
 
-class Hitbox(pygame.Rect, ABC):
+class Hitbox(FRect, ABC):
     def __init__(self, *, owner: "Entity", x, y, width, height):
         super().__init__(x, y, width, height)
         self.owner = owner
@@ -98,6 +98,7 @@ class Entity(ABC):
         self.position = position or Position(0, 0)
         self.set_size(width, height)
         self.hitboxes = []
+        self.properties = {}
 
         EntityLibrary.register_entity(self.__class__.__name__, self.__class__)
         self.set_sprite(color, custom_image)
@@ -141,7 +142,16 @@ class Entity(ABC):
         pass
 
     def killed_by(self, killer: str):
-        pass
+        self.destroy()
+
+    def get_property(self, prop: str):
+        return self.properties.get(prop)
+
+    def set_property(self, prop: str, value):
+        self.properties[prop] = value
+
+    def destroy(self):
+        grid.remove_entity(self)
 
 
 @dataclass
@@ -192,29 +202,22 @@ class MovableEntity(DynamicEntity, ABC):
 
     def move(self, vector: Vector):
         new_main_hitbox = self.main_hitbox.move(vector.x, vector.y)
-        interactable_found = False
 
         for target_hb in grid.get_all_colliding_hitboxes(new_main_hitbox):
             if target_hb.owner is self:
                 continue
+
             target_hb.on_collision_with(self)
             if target_hb.type == HitboxType.MAIN:
                 self.on_collision_with(target_hb.owner)
                 if not target_hb.owner.is_passable_for(self):
                     return
 
-            if EntityType.INTERACTABLE in target_hb.owner.type or EntityType.HACKABLE in target_hb.owner.type:
-                interactable_found = True
-
         self.position = self.position + vector
         self.main_hitbox.move_ip(vector.x, vector.y)
         for i in range(len(self.hitboxes)):
             self.hitboxes[i].move_ip(vector.x, vector.y)
 
-        # TODO: Move everything connected with player's interaction to Player class
-        # As for now we can't make drones
-        if not interactable_found:
-            hint_renderer.clear_hint()
 
     def __update_sprite_position(self, **kwargs):
         self.sprite.update_position(self.position)
