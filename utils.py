@@ -15,3 +15,12 @@ def tint_image(image: pygame.Surface, tint_color: str | tuple[int, int, int]) ->
                 tinted.set_at((x, y), pygame.Color(rgb_color.r, rgb_color.g, rgb_color.b, color.a))
 
     return tinted
+
+def load_icon(width, height, path, color):
+    try:
+        image = pygame.image.load(path).convert_alpha()
+    except pygame.error as e:
+        raise FileNotFoundError(f"Failed to load image from '{path}': {e}")
+
+    image = pygame.transform.scale(image, (width, height))
+    return tint_image(image, color)
