@@ -5,7 +5,7 @@ from entities.base import *
 from grid.position import Position
 from grid.grid import Grid
 from hacking.hackable_method import CallableMethod
-from utils import load_icon
+from utils import load_icon, create_surface
 
 grid = Grid()
 
@@ -26,7 +26,9 @@ class WallSegment(Entity, ABC):
         else:
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
-        super().__init__(position=position, width=width, height=height, color=color)
+        brick_image = create_surface(width, height, "resources/brick.png", WallSegment.THICKNESS)
+
+        super().__init__(position=position, width=width, height=height, color=color, custom_image=brick_image)
 
 
 class Button(InteractableEntity, ABC):

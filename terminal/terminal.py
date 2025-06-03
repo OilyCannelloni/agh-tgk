@@ -60,7 +60,9 @@ class Terminal(TextEditor):
                       Terminal.OFFSET_Y + Terminal.HEIGHT + Terminal.BORDER_WIDTH + 20),
             size=(button_width, button_height),
             text="Run code",
-            onSelected=self.apply_code
+            onSelected=self.apply_code,
+            foregroundColor=(200, 200, 200),
+            backgroundColor=(60, 60, 60)
         )
 
         self.num_read_only_lines = 0
@@ -73,7 +75,7 @@ class Terminal(TextEditor):
 
     def create_visual_effects(self):
         self.set_line_numbers(True)
-        pygame.draw.rect(pygame.display.get_surface(), pygame.color.Color("white"), self.rect, width=5)
+        pygame.draw.rect(pygame.display.get_surface(), pygame.color.Color("gray9"), self.rect, width=5)
 
     def apply_code(self, button):
         self.active_entity.apply_code(self.get_text_as_string())

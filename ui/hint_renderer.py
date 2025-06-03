@@ -30,6 +30,7 @@ class GameHintRenderer:
     def _create_hint_surface(self, key, text):
         key_bg_width, key_bg_height = 40, 40
         key_background = pygame.Surface((key_bg_width, key_bg_height), pygame.SRCALPHA)
+        pygame.draw.rect(key_background, (60, 60, 60), key_background.get_rect())
         pygame.draw.rect(key_background, (100, 100, 100), key_background.get_rect(), 2)
 
         key_surface = self._font.render(key.upper(), True, (200, 200, 200))

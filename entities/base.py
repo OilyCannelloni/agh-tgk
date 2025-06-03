@@ -105,11 +105,16 @@ class Entity(ABC):
         grid.register_entity(self)
 
 
-    def set_size(self, width, height):
+    def set_size(self, width, height, new_image=None):
         self.width = width
         self.height = height
         self.main_hitbox = MainHitbox(owner=self, x=self.position.x, y=self.position.y, width=self.width,
                                       height=self.height)
+
+        if new_image:
+            self.custom_image = new_image
+
+        self.set_sprite(self.color, self.custom_image)
 
     def set_sprite(self, color, image=None):
         self.color = color
