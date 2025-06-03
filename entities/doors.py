@@ -2,6 +2,7 @@ from entities.base import DynamicEntity, InteractableEntity, HackableEntity, Ent
 from entities.types import TickData
 from grid.position import Position
 from hacking.hackable_method import HackableMethod
+from utils import load_icon
 
 
 class BasicDoor(DynamicEntity):
@@ -34,20 +35,27 @@ class OpenableDoor(BasicDoor, InteractableEntity):
 
 class DestroyButton(InteractableEntity):
     def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, width=30, height=30, color="orange", **kwargs)
+        width = height = 30
+        image = load_icon(width, height, "resources/lever.png", "orange")
+
+        super().__init__(position=position, width=30, height=30, color="orange", custom_image=image, **kwargs)
         self.target: Entity = None
 
     def set_target(self, entity: Entity):
         self.target = entity
 
     def on_player_interaction(self, tick_data):
+        image = load_icon(self.width, self.height, "resources/lever-mirror.png", "orange")
+        self.set_sprite("orange", image)
         self.target.destroy()
 
 
 
 class HackableDoorButton(InteractableEntity, HackableEntity):
     def __init__(self, position: Position, **kwargs):
-        super().__init__(position=position, width=30, height=30, color="orange", **kwargs)
+        width=height=30
+        # image = load_icon(width, height, "resources/lever.png", "orange")
+        super().__init__(position=position, width=width, height=height, color="orange", **kwargs)
         self.door: BasicDoor = None
         self.release_tick = -1
         self.add_on_game_tick(self.on_tick, 600)
@@ -56,10 +64,14 @@ class HackableDoorButton(InteractableEntity, HackableEntity):
         self.door = door
 
     def unclick(self):
+        # image = load_icon(self.width, self.height, "resources/lever.png", "orange")
+        # self.set_sprite("orange", image)
         if self.door is not None:
             self.door.close()
 
     def click(self):
+        # image = load_icon(self.width, self.height, "resources/lever-mirror.png", "orange")
+        # self.set_sprite("orange", image)
         if self.door is not None:
             self.door.open()
 

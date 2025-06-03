@@ -7,7 +7,7 @@ from entities.types import EntityType
 from grid.grid import Grid
 from grid.position import Position
 from hacking.hackable_method import HackableMethod, CallableMethod, ReadOnlyMethod
-from utils import tint_image
+from utils import load_icon
 
 TELEPORTER_IMAGE_PATH = "resources/teleport.png"
 
@@ -15,18 +15,8 @@ TELEPORTER_IMAGE_PATH = "resources/teleport.png"
 class TeleporterTarget(Entity):
     def __init__(self, position: Position, **kwargs):
         width = height = 15
-        image = self._load_icon(width, height)
+        image = load_icon(width, height, TELEPORTER_IMAGE_PATH, (200, 200, 0))
         super().__init__(position=position, width=width, height=height, color=pygame.Color(200, 200, 0, 100), custom_image=image, **kwargs)
-
-    @staticmethod
-    def _load_icon(width, height):
-        try:
-            image = pygame.image.load(TELEPORTER_IMAGE_PATH).convert_alpha()
-        except pygame.error as e:
-            raise RuntimeError(f"Failed to load teleporter image: {e}")
-        image = pygame.transform.scale(image, (width, height))
-        image = tint_image(image, (200, 200, 0))
-        return image
 
     def is_passable_for(self, entity: "Entity"):
         return True
@@ -35,20 +25,10 @@ class TeleporterTarget(Entity):
 class Teleporter(Entity):
     def __init__(self, position: Position, **kwargs):
         width = height = 30
-        image = self._load_icon(width, height)
+        image = load_icon(width, height, TELEPORTER_IMAGE_PATH, "magenta")
         super().__init__(position=position, width=width, height=height, color=pygame.Color("magenta"),
                          custom_image=image, **kwargs)
         self.target: TeleporterTarget = None
-
-    @staticmethod
-    def _load_icon(width, height):
-        try:
-            image = pygame.image.load(TELEPORTER_IMAGE_PATH).convert_alpha()
-        except pygame.error as e:
-            raise RuntimeError(f"Failed to load teleporter image: {e}")
-        image = pygame.transform.scale(image, (width, height))
-        image = tint_image(image, "magenta")
-        return image
 
     def set_target(self, target: TeleporterTarget):
         self.target = target

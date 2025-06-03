@@ -1,11 +1,17 @@
+import pygame
+
 from entities.base import DynamicEntity, MovableEntity, Entity
 from entities.types import EntityType
 from grid.position import Vector, Position
+from utils import load_icon
 
 
 class LaserEmitter(DynamicEntity):
     def __init__(self, position: Position, delay: int = 50, **kwargs):
-        super().__init__(position=position, width=30, height=30, color="gray", **kwargs)
+        width = height = 40
+        image = load_icon(width, height, "resources/cannon.png", "grey")
+
+        super().__init__(position=position, width=width, height=height, color="gray", custom_image=image, **kwargs)
         self.delay = delay
         self.add_on_game_tick(self._decide_shoot_laser, 100)
 
@@ -14,7 +20,7 @@ class LaserEmitter(DynamicEntity):
             self.shoot_laser()
 
     def shoot_laser(self):
-        LaserBullet(position=self.position)
+        LaserBullet(position=self.position + Position(self.width - 10, self.height - 10))
 
     def is_passable_for(self, entity: "Entity"):
         if isinstance(entity, LaserBullet):
@@ -62,7 +68,10 @@ class NaiveChasingEntity(MovableEntity):
 
 class Zombie(NaiveChasingEntity):
     def __init__(self, position: Position):
-        super().__init__(speed=5, position=position, width=15, height=15, color="brown")
+        width = height = 15
+        image = load_icon(width, height, "resources/zombie.png", "brown")
+
+        super().__init__(speed=5, position=position, width=width, height=height, color="brown", custom_image=image)
         self.type |= EntityType.KILLABLE
 
     def on_collision_with(self, entity: "Entity"):

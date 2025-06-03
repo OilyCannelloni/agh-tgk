@@ -3,7 +3,7 @@ import pygame
 
 from grid.grid import Grid
 from grid.position import *
-from utils import tint_image
+from utils import load_icon
 from levels.base import Level
 from ui.hint_renderer import GameHintRenderer
 from .base import MovableEntity
@@ -20,9 +20,7 @@ class Player(MovableEntity, ABC):
 
     def __init__(self, position=None):
         width = height = 30
-        image = pygame.image.load("resources/character.png").convert_alpha()
-        image = pygame.transform.scale(image, (width, height))
-        image = tint_image(image, "green")
+        image = load_icon(width, height, "resources/character.png", "green")
 
         super().__init__(position=position, width=width, height=height, color="green", custom_image=image)
         self.type |= EntityType.PLAYER | EntityType.KILLABLE
