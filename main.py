@@ -11,7 +11,7 @@ from utils import create_background
 
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 720
-TILE_SIZE = 50
+TILE_SIZE = 70
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
