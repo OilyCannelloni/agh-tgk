@@ -7,15 +7,22 @@ from levels.level import LevelTestDoor, LevelTeleporter, LevelLasers
 from ui.hint_renderer import hint_renderer
 from terminal.terminal import Terminal
 from grid.grid import Grid
+from utils import create_background
+
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 720
+TILE_SIZE = 70
 
 pygame.init()
-screen = pygame.display.set_mode((1200, 720))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
 hint_renderer.initialize(screen)
 
 pp_input = pp.Input()
 terminal = Terminal(pp_input)
+
+background_surface = create_background("resources/StoneFloorTexture.png", TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
 
 grid = Grid()
 
@@ -46,7 +53,7 @@ while True:
 
     # Render the graphics here.
     # ...
-    screen.fill("black")  # Fill the display with a solid color
+    screen.blit(background_surface, (0, 0))
     grid.sprites.update()
     grid.sprites.draw(screen)
 

@@ -5,7 +5,7 @@ from entities.base import *
 from grid.position import Position
 from grid.grid import Grid
 from hacking.hackable_method import CallableMethod
-from utils import tint_image
+from utils import load_icon, create_surface
 
 grid = Grid()
 
@@ -26,7 +26,9 @@ class WallSegment(Entity, ABC):
         else:
             raise NotImplementedError("Walls must be vertical or horizontal for now")
 
-        super().__init__(position=position, width=width, height=height, color=color)
+        brick_image = create_surface(width, height, "resources/brick.png", WallSegment.THICKNESS)
+
+        super().__init__(position=position, width=width, height=height, color=color, custom_image=brick_image)
 
 
 class Button(InteractableEntity, ABC):
@@ -52,18 +54,8 @@ class Button(InteractableEntity, ABC):
 class Trap(Entity, ABC):
     def __init__(self, position: Position, **kwargs):
         width = height = 30
-        image = self._load_icon(width, height)
+        image = load_icon(width, height, "resources/spider-web.png", "red")
         super().__init__(position=position, width=width, height=height, color="red", custom_image=image, **kwargs)
-
-    @staticmethod
-    def _load_icon(width, height):
-        try:
-            image = pygame.image.load("resources/spider-web.png").convert_alpha()
-        except pygame.error as e:
-            raise RuntimeError(f"Failed to load teleporter image: {e}")
-        image = pygame.transform.scale(image, (width, height))
-        image = tint_image(image, "red")
-        return image
 
     def on_collision_with(self, entity: "Entity"):
         entity.killed_by("Trap")
