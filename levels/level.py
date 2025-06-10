@@ -65,7 +65,7 @@ self.set_target(exit_target)
     def make_exit_cell(position):
         Level.make_wall_cell("nesw", 100, position)
         tt = TeleporterTarget(position + Vector(-40, -40))
-        Exit(position + Vector(10, 0), LevelTestDoor.load)
+        Exit(position + Vector(10, 0), LevelLasers.load)
         return tt
 
     @classmethod

@@ -26,7 +26,7 @@ background_surface = create_background("resources/StoneFloorTexture.png", TILE_S
 
 grid = Grid()
 
-LevelLasers.load()
+LevelTestDoor.load()
 
 
 tick_data = TickData(0, pp_input)
